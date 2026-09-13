@@ -1,0 +1,28 @@
+flowchart LR
+  U[使用者／製作人] -->|指派與核准| C[Codex 主代理]
+  C -->|工作前讀取| G[(智慧圖譜 JSON)]
+  C -->|委派規劃／審查| M[Local Model MCP Bridge]
+  M -->|localhost:11434| O[Ollama 地端模型]
+  M -->|讀取專案狀態| G
+
+  GD[Godot 4.7.2] --> CORE[核心循環\n移動·射擊·碰撞·得分]
+  CORE --> ENEMY[敵機與彈幕]
+  ENEMY --> BOSS[BOSS 戰]
+  CORE --> PICK[道具系統]
+  CORE --> HUD[HUD／暫停／Game Over]
+  ART[程序化 3D] --> CORE
+  IMG[PNG／貼圖素材包] --> FINALART[Blender GLB 正式素材]
+  AUDIO[原創 WAV 音效] --> CORE
+
+  VERIFY[靜態驗證] --> HEADLESS[Godot Headless 驗證]
+  HEADLESS --> BUILD[Windows EXE]
+  POOL[物件池優化] --> BUILD
+  FINALART --> BUILD
+  SETTINGS[音量／顯示／難度設定] --> BUILD
+
+  classDef done fill:#073a43,stroke:#37e6ff,color:#ecffff;
+  classDef ready fill:#3f235e,stroke:#ff6ee3,color:#ffffff;
+  classDef todo fill:#382b16,stroke:#ffc34d,color:#fff6d8;
+  class CORE,ENEMY,BOSS,PICK,HUD,ART,IMG,AUDIO,G done;
+  class C,M,VERIFY ready;
+  class O,GD,HEADLESS,POOL,FINALART,SETTINGS,BUILD todo;

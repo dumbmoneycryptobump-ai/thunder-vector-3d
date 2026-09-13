@@ -1,0 +1,7 @@
+# Run scripts/configure_codex_mcp.ps1 to generate the real project-scoped config.
+# Codex loads project .codex/config.toml only after you trust the project.
+
+[mcp_servers.thunder_local]
+command = "python"
+args = ["tools/local_model_mcp.py"]
+env = { OLLAMA_BASE_URL = "http://localhost:11434", OLLAMA_MODEL = "qwen3.5", PROJECT_ROOT = "." }

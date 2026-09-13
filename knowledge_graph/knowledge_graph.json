@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0",
+  "project": {
+    "id": "thunder-vector-3d",
+    "name": "Thunder Vector 3D",
+    "engine": "Godot 4.7.2 stable",
+    "platform": "Windows desktop",
+    "rendering": "Local 3D / GL Compatibility",
+    "language": "GDScript",
+    "goal": "A compact vertical 3D shoot-'em-up inspired by classic Raiden-style arcade pacing.",
+    "source_of_truth": "knowledge_graph/knowledge_graph.json"
+  },
+  "workflow_rules": [
+    "The user selects or approves a task.",
+    "Codex reads AGENTS.md and this graph before editing.",
+    "Codex may call the local Ollama reviewer through MCP for planning and review.",
+    "Every completed task must include evidence: changed files and a verification command.",
+    "The game must remain playable offline and must not call cloud APIs at runtime."
+  ],
+  "nodes": [
+    {"id": "user", "type": "actor", "label": "使用者／製作人", "status": "active", "owner": "user"},
+    {"id": "codex", "type": "agent", "label": "Codex 主代理", "status": "ready", "owner": "codex"},
+    {"id": "local_model", "type": "agent", "label": "Ollama 地端模型", "status": "setup_required", "owner": "local"},
+    {"id": "mcp_bridge", "type": "tool", "label": "Local Model MCP Bridge", "status": "ready", "owner": "repo"},
+    {"id": "graph", "type": "artifact", "label": "智慧圖譜 JSON／PNG", "status": "done", "owner": "repo"},
+    {"id": "godot", "type": "tool", "label": "Godot 4.7.2", "status": "ready", "owner": "user_machine", "evidence": [{"timestamp_utc": "2026-08-29T08:15:15.2303280Z", "text": "Official WinGet Godot 4.7.2 installed; executable reported 4.7.2.stable.official.ed1daf0bf."}]},
+    {"id": "core_loop", "type": "feature", "label": "移動、射擊、碰撞、得分", "status": "done", "owner": "game"},
+    {"id": "enemy_system", "type": "feature", "label": "偵察／重型敵機與彈幕", "status": "done", "owner": "game"},
+    {"id": "boss", "type": "feature", "label": "BOSS 戰", "status": "done", "owner": "game"},
+    {"id": "powerups", "type": "feature", "label": "生命／炸彈／火力道具", "status": "done", "owner": "game"},
+    {"id": "hud", "type": "feature", "label": "HUD、暫停、Game Over", "status": "done", "owner": "game"},
+    {"id": "procedural_3d", "type": "asset", "label": "本機程序化 3D 佔位模型", "status": "done", "owner": "game"},
+    {"id": "image_pack", "type": "asset", "label": "PNG／貼圖／爆炸精靈素材", "status": "done", "owner": "repo"},
+    {"id": "audio_pack", "type": "asset", "label": "原創 WAV 音效", "status": "done", "owner": "repo"},
+    {"id": "static_verify", "type": "test", "label": "檔案與規格靜態驗證", "status": "done", "owner": "tools", "evidence": [{"timestamp_utc": "2026-08-29T09:05:46.8079881Z", "text": ".\\scripts\\verify.ps1 exited 0 with required-file and specification checks, 5 Python verifier tests, Godot 4.7.2 import/parser validation, settings persistence/UI tests, seven-asset alpha/integration validation, GAMEPLAY_FLOW_TEST_PASS for combat, all three pickups, bomb clearing, boss defeat, game over/restart and restored fixed-capacity pools, plus a clean 15-second main-scene smoke test. Added game/tests/gameplay_flow_test.gd and wired it into scripts/verify.ps1 and tools/verify_project.py."}]},
+    {"id": "headless_verify", "type": "test", "label": "Godot Headless 驗證", "status": "done", "owner": "user_machine", "evidence": [{"timestamp_utc": "2026-08-29T08:15:15.2303280Z", "text": ".\\scripts\\verify.ps1 exited 0 with static checks, 5 verifier unit tests, Godot --import parser validation, and a clean 900-frame fixed-60-FPS main-scene smoke test. Ten additional smoke repetitions had zero Godot errors or leak lines. Runtime SFX is intentionally skipped under the headless display driver; windowed GPU, input, and audio remain manual gates. Changed game/default_bus_layout.tres, game/project.godot, game/scripts/main.gd, game/tests/headless_smoke.gd, scripts/verify.ps1, tools/verify_project.py, and tools/test_verify_project.py; Godot generated version-controlled .import/.uid metadata."}]},
+    {"id": "pooling", "type": "optimization", "label": "子彈／敵人物件池", "status": "done", "owner": "codex", "evidence": [{"timestamp_utc": "2026-08-29T08:32:11.6159617Z", "text": "Implemented fixed-capacity reusable pools for player bullets, enemy bullets, scouts, and heavy enemies with active/idle/reuse/exhaustion telemetry. .\\scripts\\verify.ps1 exited 0 (static checks, 5 verifier unit tests, Godot 4.7.2 import/parser, and 15-second runtime smoke). .\\scripts\\stress_pool.ps1 exited 0 after a fixed-60-FPS 36,000-frame/600-second simulation: capacities remained 96/128/32/16, exhaustion stayed zero, late node count remained bounded, and restart restored the exact initial 1,039-node count. Changed game/scripts/main.gd and added game/tests/pool_stress.gd plus scripts/stress_pool.ps1."}]},
+    {"id": "art_replacement", "type": "asset", "label": "原創透明 PNG 2.5D 正式素材替換", "status": "done", "owner": "art", "evidence": [{"timestamp_utc": "2026-08-29T09:01:37.9169713Z", "text": "Per the user's explicit image/去背 direction, replaced the former GLB requirement with seven original ImageGen RGBA assets for player, scout, heavy, boss, and three pickups. Each accepted source is a 1254x1254 alpha-blended PNG with four transparent corners and 100% transparent sampled borders. visual_factory.gd mounts them as Sprite3D overlays on Node3D actors while preserving 3D camera/collisions and hidden procedural fallback meshes. .\\scripts\\verify.ps1 exited 0 including ART_INTEGRATION_TEST_PASS for all seven roles, alpha, fallback visibility, enemy orientation, and GL Compatibility. A real Windows/OpenGL 3.3 Compatibility capture on AMD Radeon RX 7600 produced docs/screenshots/gameplay_preview.png at 1280x720 with PREVIEW_CAPTURE_PASS; visual inspection found no black boxes, clipping, wrong orientation, or hull bleed-through. Prompts and SHA-256 hashes are recorded in game/assets/generated/ART_PROVENANCE.md."}]},
+    {"id": "settings", "type": "feature", "label": "音量／解析度／難度設定", "status": "done", "owner": "codex", "evidence": [{"timestamp_utc": "2026-08-29T08:36:47.7200905Z", "text": "Added offline ConfigFile persistence at user://settings.cfg for master/SFX volume, windowed/fullscreen mode, 1280x720/1600x900/1920x1080 resolution, and easy/normal/hard difficulty. O opens a keyboard-only settings overlay; Enter/Esc/O saves and returns to pause. Added a routed SFX bus and difficulty profiles that only scale enemy pressure. .\\scripts\\verify.ps1 exited 0 with static checks, 5 Python tests, Godot 4.7.2 import/parser, SETTINGS_STORE_TEST_PASS, SETTINGS_UI_TEST_PASS, and a 15-second main-scene smoke test. Changed game/scripts/main.gd, game/default_bus_layout.tres, scripts/verify.ps1, and tools/verify_project.py; added game/scripts/settings_store.gd plus two GDScript tests."}]},
+    {"id": "windows_build", "type": "release", "label": "Windows EXE", "status": "local_launch_passed_clean_machine_pending", "owner": "user_machine", "evidence": [{"timestamp_utc": "2026-08-29T09:21:15.1828377Z", "text": "Installed the official Godot 4.7.2 standard export templates after verifying the 1,281,349,702-byte TPZ against SHA-256 f298490b8d44d934be425a5a65a51bf15f422428b229a06a6e11d9ffea248011 and the official SHA-512. The complete verification gate passed and Godot exported a fresh 121,051,880-byte Windows x86_64 PE. Launching that unsigned EXE was then blocked by this host's enforced Windows 11 Smart App Control policy (VerifiedAndReputablePolicyState=1; Code Integrity events 3077 and 3033) from both Codex PowerShell and signed Windows PowerShell. The node is not done: an actual exported-EXE launch on a non-enforcing clean Windows VM/device or trusted CA code signing remains required. Build scripts now prevent stale-output success, validate engine/template version, PE architecture, logs, launch behavior and ZIP integrity; an explicit -SkipLaunchValidation path records the skipped state without claiming launch success."}, {"timestamp_utc": "2026-09-13T08:10:20.862Z", "text": "The existing build/ThunderVector3D.exe launched successfully through Windows Computer Use on this host and exposed one live window titled Thunder Vector 3D. A screenshot-backed state capture showed active gameplay at the level-3 boss encounter. This clears the prior host-local Smart App Control launch block; an independent clean-machine launch remains pending, so the node is not marked done."}]}
+  ],
+  "edges": [
+    {"from": "user", "to": "codex", "relation": "assigns_and_approves"},
+    {"from": "codex", "to": "graph", "relation": "reads_before_work"},
+    {"from": "codex", "to": "mcp_bridge", "relation": "delegates_review"},
+    {"from": "mcp_bridge", "to": "local_model", "relation": "calls_local_api"},
+    {"from": "mcp_bridge", "to": "graph", "relation": "reads_context"},
+    {"from": "godot", "to": "core_loop", "relation": "runs"},
+    {"from": "core_loop", "to": "enemy_system", "relation": "supports"},
+    {"from": "enemy_system", "to": "boss", "relation": "extends"},
+    {"from": "core_loop", "to": "powerups", "relation": "supports"},
+    {"from": "core_loop", "to": "hud", "relation": "reports_state_to"},
+    {"from": "procedural_3d", "to": "core_loop", "relation": "renders"},
+    {"from": "image_pack", "to": "art_replacement", "relation": "guides"},
+    {"from": "audio_pack", "to": "core_loop", "relation": "enhances"},
+    {"from": "static_verify", "to": "headless_verify", "relation": "precedes"},
+    {"from": "headless_verify", "to": "windows_build", "relation": "gates"},
+    {"from": "pooling", "to": "windows_build", "relation": "recommended_before"},
+    {"from": "art_replacement", "to": "windows_build", "relation": "recommended_before"},
+    {"from": "settings", "to": "windows_build", "relation": "recommended_before"}
+  ],
+  "next_tasks": [
+    {"priority": 1, "node": "headless_verify", "definition_of_done": "Godot opens the project with zero parser errors and the main scene runs."},
+    {"priority": 2, "node": "pooling", "definition_of_done": "Player/enemy bullets reuse objects and a 10-minute stress test has stable node count."},
+    {"priority": 3, "node": "settings", "definition_of_done": "Settings persist volume, display mode, and difficulty locally."},
+    {"priority": 4, "node": "art_replacement", "definition_of_done": "Player, scout, heavy, boss, and pickups use original transparent PNG Sprite3D overlays; Node3D, 3D collisions, GL Compatibility, alpha verification, and a real windowed visual capture all pass."},
+    {"priority": 5, "node": "windows_build", "definition_of_done": "A clean Windows machine launches the exported EXE without Godot installed."}
+  ]
+}

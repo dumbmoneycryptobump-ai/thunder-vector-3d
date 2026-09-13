@@ -1,0 +1,15 @@
+.venv/
+.codex/config.toml
+.godot/
+game/.godot/
+build/
+logs/*.jsonl
+logs/*.tmp
+__pycache__/
+*.pyc
+.env
+.env.*
+credentials.json
+*.pem
+*.pfx
+*.key

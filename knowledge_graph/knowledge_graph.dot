@@ -1,0 +1,41 @@
+digraph G {
+  graph [bgcolor="#020716", rankdir=LR, pad="0.35", nodesep="0.55", ranksep="0.85", fontname="Noto Sans CJK TC", label="THUNDER VECTOR 3D｜智慧圖譜（Codex × 地端模型）", labelloc=t, fontsize=25, fontcolor="#EAFDFF"];
+  node [shape=box, style="rounded,filled", fontname="Noto Sans CJK TC", fontsize=13, color="#42D9FF", fontcolor="#EAFDFF", fillcolor="#08213A", penwidth=1.7, margin="0.16,0.10"];
+  edge [fontname="Noto Sans CJK TC", fontsize=10, color="#6DA6C9", fontcolor="#B9DFF4", arrowsize=0.75];
+
+  user [label="使用者／製作人\n[active]", color="#42D9FF"];
+  codex [label="Codex 主代理\n[ready]", color="#FF64DA", fillcolor="#321741"];
+  graphjson [label="智慧圖譜 JSON\n[done]", color="#69F2B0", fillcolor="#08352B"];
+  mcp [label="Local Model MCP Bridge\n[ready]", color="#FFC95D", fillcolor="#3C2C0C"];
+  ollama [label="Ollama 地端模型\n[setup required]", color="#FF64DA", fillcolor="#321741"];
+
+  godot [label="Godot 4.7.2\n[install required]", color="#88AFFF"];
+  core [label="核心循環\n移動·射擊·碰撞·得分\n[done]", color="#B18AFF", fillcolor="#25194B"];
+  enemy [label="敵機與彈幕\n[done]", color="#69F2B0", fillcolor="#08352B"];
+  boss [label="BOSS 戰\n[done]", color="#69F2B0", fillcolor="#08352B"];
+  hud [label="HUD／暫停／Game Over\n[done]", color="#69F2B0", fillcolor="#08352B"];
+  assets [label="PNG／貼圖／WAV 素材\n[done]", color="#69F2B0", fillcolor="#08352B"];
+  verify [label="靜態驗證\n[ready]", color="#FF926B", fillcolor="#3C1E16"];
+  headless [label="Godot Headless 驗證\n[pending]", color="#FFC95D", fillcolor="#3C2C0C"];
+  pooling [label="物件池優化\n[todo]", color="#FFC95D", fillcolor="#3C2C0C"];
+  art [label="Blender GLB 正式模型\n[todo]", color="#FFC95D", fillcolor="#3C2C0C"];
+  settings [label="設定選單\n[todo]", color="#FFC95D", fillcolor="#3C2C0C"];
+  build [label="Windows EXE\n[planned]", color="#69F2B0", fillcolor="#08352B"];
+
+  user -> codex [label="指派／核准"];
+  codex -> graphjson [label="工作前讀取"];
+  codex -> mcp [label="委派審查"];
+  mcp -> ollama [label="localhost API"];
+  mcp -> graphjson [label="讀取狀態"];
+  codex -> godot [label="編輯與執行"];
+  godot -> core [label="運行"];
+  core -> enemy [label="支援"];
+  enemy -> boss [label="擴充"];
+  core -> hud [label="狀態輸出"];
+  assets -> core [label="呈現／音效"];
+  verify -> headless [label="先做"];
+  headless -> build [label="通過後"];
+  pooling -> build [label="建議完成"];
+  art -> build [label="建議完成"];
+  settings -> build [label="建議完成"];
+}

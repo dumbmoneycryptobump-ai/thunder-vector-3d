@@ -1,0 +1,18 @@
+Thunder Vector 3D starter assets
+
+The original project assets under `game/assets/`, the two asset contact sheets
+under `reference_images/`, the gameplay screenshot under `docs/screenshots/`,
+the knowledge-graph diagrams, and the Godot primitive-mesh compositions were
+created for this project. You may use, modify, and redistribute them as part of
+your own project, including commercially.
+
+The seven files under `game/assets/generated/*_imagegen_v1.png` are original OpenAI ImageGen outputs created for this project on 2026-08-29. Their prompts, hashes, and alpha-verification method are recorded in `game/assets/generated/ART_PROVENANCE.md`.
+
+This asset grant does not cover third-party software notices under
+`docs/licenses/`, which remain under their stated licenses. Historical planning
+boards under `docs/早期參考稿/` and the outdated concept images
+`reference_images/gameplay_visual_target.jpg` and
+`reference_images/title_card.jpg` are intentionally excluded from the public
+source release and are not covered by this grant.
+
+No trademark rights are granted. Do not use the name, logo, music, artwork, or other protected assets of the commercial Raiden/雷電 game series. The word "Raiden-style" in documentation describes the broad vertical-shooter genre reference only; the included game name and assets are original placeholders.

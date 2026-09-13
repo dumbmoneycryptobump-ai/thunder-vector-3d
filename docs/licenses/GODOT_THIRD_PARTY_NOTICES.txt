@@ -1,0 +1,11 @@
+Thunder Vector 3D includes an unmodified Godot Engine 4.7.2 export template.
+
+Godot Engine incorporates permissively licensed third-party components. The
+complete copyright and license inventory for the exact 4.7.2-stable source tag
+is included offline as GODOT_COPYRIGHT.txt. Its authoritative upstream copy is:
+
+https://github.com/godotengine/godot/blob/4.7.2-stable/COPYRIGHT.txt
+
+Godot's license and redistribution guidance:
+
+https://godotengine.org/license/
