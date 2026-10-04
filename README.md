@@ -4,22 +4,22 @@
 
 ## 直接遊玩
 
-- 免安裝瀏覽器版尚未上線：GitHub API 回覆此使用者的 Actions 已停用，無法啟動 Pages 建置。
-- [Windows 與 Web 封包／版本紀錄](https://github.com/Avery-TSE/thunder-vector-3d/releases)：Windows ZIP 解壓後執行 `ThunderVector3D.exe`；目前未登入的對外存取也回傳 404，待 GitHub 解除帳戶限制才能確認別人可下載。
+- [免安裝瀏覽器版](https://dumbmoneycryptobump-ai.github.io/thunder-vector-3d/index.html)：Pages 已成功建置／部署，正式網址實際遊戲啟動、四武器、觸控與離線重載已驗收。
+- [Windows 與 Web 封包／版本紀錄](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d/releases)：Windows ZIP 解壓後執行 `ThunderVector3D.exe`；此帳戶的 Release 發佈與匿名下載驗證仍在進行。
 - [跨裝置操作與驗收範圍](docs/CROSS_DEVICE.md)：鍵盤／滑鼠、觸控搖桿、手把與離線限制。
 
 手機／平板使用畫面外的搖桿和射擊鈕，可同時移動射擊；直向與橫向保持完整戰場。需要支援 WebGL 2／WebAssembly 的現代瀏覽器。尚未在所有實體 Android／iOS 裝置測試，不能承諾舊設備或每台手機的效能。首次完整下載前不能離線玩。
 
-2026-10-04：原始碼已推送到 public 儲存庫，封包已核對；但匿名專案頁、raw 原始碼與 Pages 均 HTTP 404，Actions 觸發為 HTTP 422。不是已完成對外上線。[發行證據與待辦](docs/CROSS_DEVICE_RELEASE.md)／[GitHub 官方限制說明](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository)。帳戶層級停用需要 GitHub Support 審查，未自行更換帳戶、購買額度或改用其他主機。
+2026-10-04：依使用者確認改以 `dumbmoneycryptobump-ai` 發佈。公開原始碼與 raw README 匿名存取 HTTP 200；GitHub Actions run `37182321498` 已實際成功，Pages 正式網址 HTTP 200 且 Chrome 中實際遊戲／離線重載通過。原 `Avery-TSE` 儲存庫與發行保留不動，其帳戶限制屬歷史紀錄，不代表新帳戶的狀態。Release 匿名下載尚待完成。[發行證據與待辦](docs/CROSS_DEVICE_RELEASE.md)
 
 ![Thunder Vector 3D 擴大地圖與連鎖閃電實機展示](docs/screenshots/weapon_3.png)
 
 ## 下載原始碼
 
-公開專案：<https://github.com/Avery-TSE/thunder-vector-3d>
+公開專案：[dumbmoneycryptobump-ai/thunder-vector-3d](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d)
 
 ```powershell
-git clone https://github.com/Avery-TSE/thunder-vector-3d.git
+git clone https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d.git
 cd thunder-vector-3d
 .\scripts\start_game.ps1
 ```
@@ -200,7 +200,7 @@ ThunderVector3D_StarterKit/
 .\scripts\build_windows.ps1 -OutputSubdirectory maps-weapons
 ```
 
-地圖與武器版已輸出至獨立的 `build\maps-weapons\`，不覆蓋先前版本。已通過本機 EXE 啟動與 ZIP 驗證，完整來源 SHA、雜湊及限制見 [發行驗收紀錄](docs/MAPS_WEAPONS_RELEASE.md)。這次本機更新尚未推送 GitHub。
+舊版地圖與武器包保留在獨立的 `build\maps-weapons\`，不覆蓋先前版本。它已通過本機 EXE 啟動與 ZIP 驗證，完整來源 SHA、雜湊及限制見 [當時的發行驗收紀錄](docs/MAPS_WEAPONS_RELEASE.md)。目前跨裝置 1.1.0 的公開來源與下載狀態以上方連結及 [最新驗收紀錄](docs/CROSS_DEVICE_RELEASE.md) 為準。
 
 輸出位置：
 
