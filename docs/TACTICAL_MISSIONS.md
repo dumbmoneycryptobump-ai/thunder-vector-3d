@@ -35,7 +35,7 @@
 |---|---|
 | `mission_director_test.gd` | 10,929 項斷言，200 輪／1,800 個獨立完成獎勵 |
 | `world_events_test.gd` | 39,192 項斷言，600 秒模擬、固定節點／資源與實際 pause frame |
-| `tactical_integration_test.gd` | 38 項整合斷言；實際擊殺、武器開火、100 發超載、收集、單波傷害、致死優先、pause/reset、首領救援 hold／恢復 |
+| `tactical_integration_test.gd` | 最初 38 項，CI 基準反例修正後 40 項整合斷言；實際擊殺、武器開火、100 發超載、收集、單波傷害、致死優先、pause/reset、首領救援 hold／恢復 |
 | 既有驗收 | 49 項 Python 測試及原玩法／素材／設定／地圖／武器／觸控回歸、15 秒 smoke 全部通過 |
 | 原生畫面 | 真 Windows／AMD RX 7600 GL Compatibility，1280×720 的新內容 capture exit 0，畫面已檢視 |
 
@@ -62,3 +62,11 @@ Windows／Web 套件及公開下載結果記錄在 [發行紀錄](TACTICAL_RELEA
 | INT-005，致死後領獎 | 事件傷害致死立即 return，清世界事件與通知；HP=1 的真場景測試抑制待領 600 分 | confirmed／resolved／none |
 
 第 2 輪 `new_blockers` 為空；模型意見不能取代实測。保留的反方風險：平衡與任務節奏尚需真人長時間遊玩；大幅卡頓時採步末航道碰撞，不對已跨過的整個脈衝補傷害；未在所有實體手機、macOS、Linux 或另一台乾淨 Windows 驗證。可回退到保留的公開 v1.1.0，沒有覆蓋舊套件。
+
+## CI 額外反例
+
+首次新版公開 Actions `37186241892` 真實失敗、deploy skipped：節點數基準前的 11 次擊殺可能留下 7% 機率產生的活補給；停用 physics 的 fixture 不會自行消除它們，第一輪 reset 才刪除，造成節點數變小。修正只在 test 建立固定補給反例、先 reset／等待釋放、確認 pickup group 清空，再量測原樣的全域 node-count 等式與 120 次重開；沒有放寬資源門檻或修改已發布 runtime／tag／ZIP。
+
+實際修正後單測 40 項，獨立 10 次 fresh-process 隨機初始化全數 exit 0；另完整 verifier、15 秒 smoke、明確 headless editor parser 全通過。公開 Actions `37186539392` 的同版 verifier、Web build 與 Pages deploy 全部 success，正式 Chrome 新任務列與 WebGL 啟動已驗收。
+
+為新證據揭露的 CI blocker 加做唯一一次必要的 Qwen flash 窄範圍審查。Qwen `CI-20261004-01` 回覆 BLOCKED/HIGH，稱高負載可能讓 `queue_free` 跨越兩個完整 process frames 尚未執行；Codex 不接受這個沒有具體反例的調度推論。[Godot 官方 queue_free 契約](https://docs.godotengine.org/en/stable/classes/class_node.html#class-node-method-queue-free) 明定於目前 frame 結束、所有 deferred calls 後釋放；fixture 沒有延續的 deferred 工作，兩次等待跨過該 flush，並且額外明查 group 清空，10 次真實執行通過。保留 Qwen 的原始反方結論，不冒稱它返回 PASS；最終以独立 reviewer 和真實 CI 結果判定，不對其他尚未測環境外推。

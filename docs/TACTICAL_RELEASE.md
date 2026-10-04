@@ -26,4 +26,12 @@ Windows 玩家可保留已公開 [v1.1.0 的舊套件](https://github.com/dumbmo
 
 ## 公開發行
 
-新版公開 push、Actions／Pages 和 Release 匿名下載仍待實際執行驗證；未宣稱新的 1.2.0 已上線。Windows 1.2.0 啟動驗收仍受上述政策阻擋。最新實際狀態以智慧圖譜及本文件後续更新為準。
+新版公開 source 已正常 push，Web-only [v1.2.0 Release](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d/releases/tag/v1.2.0) `402900832` 已發布（draft=false），tag 固定 `17ac56b5f3f937c591d442c184ff29d46cfe832e`。服務端唯一 Web ZIP 的 uploaded state、大小與 SHA-256 與本機相符；獨立 reviewer 不使用登入／Authorization，完整串流下載至 EOF（HTTP 200、36,685,712 bytes、441.74 秒），實際 SHA-256 與上表一致。不只是 HEAD 或服務端 digest。
+
+初次 Actions [37186241892](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d/actions/runs/37186241892) 真實 failure／deploy skipped，因測試把活的隨機掉落物納入固定節點基準，不是遊戲物件池增長。測試專用修正正常 push 為 `bf2e256f667d0aca5e25bfe21349664a26eaa5fe`；本機獨立 10 次隨機單測和全套 verifier 通過，[37186539392](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d/actions/runs/37186539392) 真實 build／Pages deploy success。沒有修改 v1.2.0 tag、asset 或 runtime。
+
+正式 [Pages 網頁](https://dumbmoneycryptobump-ai.github.io/thunder-vector-3d/index.html) 的 Chrome 舊快取實際顯示「更新並重載」，點擊後載入新版，開始遊戲成功：新戰術任務列實際顯示「掃蕩先鋒 0/12 · 40秒」、生命 5、充能 100%，離線快取完成。這項正式站新版啟動驗收與上表的本機完整四尺寸／操作／離線 QA 分開記錄。
+
+ZIP 內 `README.md` 沿用來源 HTML 模板的說明，可能使讀者誤解；本 ZIP 已有完整匯出的 HTML／JS／WASM／PCK，解壓後用 HTTP/HTTPS serve 即可，不需重建。Release 說明已澄清；發行後不偷偷替換資產。
+
+Windows 1.2.0 啟動驗收仍受上述政策阻擋，整體交接保持 partial。唯讀清理審查發現 9 組相同 cache／法律文字及 1 組跨技能的重複通用指令；不同作用域不等於可刪除，全部保留。命令去重缺少結構化日誌，coverage_complete=false。7 個本回合暫存檔與 ledger 保留於專案外，未執行自動隔離或刪除；正式素材、永久測試、套件、失敗證據與不相關工作均保留。
