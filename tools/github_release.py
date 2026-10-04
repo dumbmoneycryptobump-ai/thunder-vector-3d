@@ -6,6 +6,8 @@ release requires absolute notes/ZIP paths and a full commit on the public defaul
 branch. It never replaces assets or modifies published releases. Repeat the same
 command with --publish only after reviewing the verified draft output.
 Use --draft-id to resume a known draft when release enumeration is incomplete.
+Use --account to select an existing GCM account and verify its API identity before
+any operation. A mismatched or unavailable account never falls back or logs in.
 GitHub metadata writes are not atomic against concurrent privileged writers; use
 an exclusively managed draft. Post-publication checks detect mismatches but never
 delete or silently roll back an already-public release.
@@ -33,13 +35,23 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
-def credential():
+def account_name(value):
+    if not isinstance(value, str) or not re.fullmatch(
+            r"(?=.{1,39}\Z)[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*", value):
+        raise Failure("Account must be a GitHub username of at most 39 letters, digits or single hyphens.")
+    return value
+
+
+def credential(account=None):
+    if account is not None:
+        account_name(account)
     env = {k: v for k, v in os.environ.items()
            if not k.startswith(("GIT_TRACE", "GCM_TRACE")) and k != "GIT_CURL_VERBOSE"}
     env.update(GIT_TERMINAL_PROMPT="0", GCM_INTERACTIVE="Never")
     result = subprocess.run(
         ["git", "-c", "credential.interactive=never", "credential", "fill"],
-        input="protocol=https\nhost=github.com\n\n", text=True,
+        input="protocol=https\nhost=github.com\n" +
+              ("username=" + account + "\n" if account is not None else "") + "\n", text=True,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, timeout=45)
     values = dict(line.split("=", 1) for line in result.stdout.splitlines() if "=" in line)
     if result.returncode or not values.get("username") or not values.get("password"):
@@ -48,11 +60,17 @@ def credential():
 
 
 class GitHub:
-    def __init__(self, repo):
+    def __init__(self, repo, account=None):
+        self.account = account_name(account) if account is not None else None
         self.base = "https://api.github.com/repos/" + repo
-        self.token = credential()
+        self.token = credential(account) if account is not None else credential()
         self.opener = urllib.request.build_opener(NoRedirect())
         self.scopes = None
+        if self.account is not None:
+            identity = self.request("GET", "https://api.github.com/user")
+            login = identity.get("login") if isinstance(identity, dict) else None
+            if not isinstance(login, str) or login.casefold() != self.account.casefold():
+                raise Failure("Authenticated GitHub account does not match --account; no writes attempted.")
 
     def request(self, method, path, payload=None, missing=False, binary=None):
         url = path if path.startswith("https://") else self.base + path
@@ -268,6 +286,7 @@ def main():
     for name in ("inspect", "enable-pages", "release", "actions"):
         sub = commands.add_parser(name)
         sub.add_argument("--repo", required=True, help="GitHub OWNER/REPOSITORY")
+        sub.add_argument("--account", help="Select an existing GCM username and verify its GitHub API identity; never log in")
         if name == "release":
             sub.add_argument("--tag", required=True)
             sub.add_argument("--target", required=True)
@@ -280,7 +299,7 @@ def main():
     args = parser.parse_args()
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", args.repo):
         raise Failure("Repository must be OWNER/REPOSITORY, not a URL.")
-    api = GitHub(args.repo)
+    api = GitHub(args.repo, account=args.account)
     if args.command == "inspect":
         result = inspect(api)
     elif args.command == "enable-pages":

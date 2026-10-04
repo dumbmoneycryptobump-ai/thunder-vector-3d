@@ -257,6 +257,80 @@ class ReleaseTests(unittest.TestCase):
 
 
 class AuthenticationTests(unittest.TestCase):
+    def test_selected_account_is_only_passed_in_gcm_stdin(self):
+        result = SimpleNamespace(returncode=0, stdout="username=ignored\npassword=synthetic-value\n",
+                                 stderr="private details")
+        with patch.object(release.subprocess, "run", return_value=result) as run:
+            self.assertEqual(release.credential("test-owner"), "synthetic-value")
+        self.assertEqual(run.call_args.kwargs["input"],
+                         "protocol=https\nhost=github.com\nusername=test-owner\n\n")
+        self.assertNotIn("test-owner", repr(run.call_args.args))
+        self.assertEqual(run.call_args.kwargs["env"]["GCM_INTERACTIVE"], "Never")
+
+    def test_invalid_account_never_reaches_credential_helper(self):
+        for account in ("", "-owner", "owner-", "owner--other", "owner_other", "owner.name",
+                        "a" * 40, "owner\npassword=injected", "owner\rhost=other", "用戶", 7):
+            with self.subTest(account=account), patch.object(release.subprocess, "run") as run:
+                with self.assertRaisesRegex(release.Failure, "GitHub username"):
+                    release.credential(account)
+                run.assert_not_called()
+
+    def test_selected_account_matches_api_identity_case_insensitively(self):
+        with patch.object(release, "credential", return_value="synthetic-value") as credential, \
+                patch.object(release.GitHub, "request", return_value={"login": "TEST-OWNER"}) as request:
+            api = release.GitHub("example/game", account="test-owner")
+        credential.assert_called_once_with("test-owner")
+        request.assert_called_once_with("GET", "https://api.github.com/user")
+        self.assertEqual(api.account, "test-owner")
+
+    def test_selected_account_mismatch_or_missing_identity_never_writes(self):
+        for identity in ({"login": "different-owner"}, {}, {"login": None}, [], None):
+            with self.subTest(identity=identity), \
+                    patch.object(release, "credential", return_value="synthetic-value"), \
+                    patch.object(release.GitHub, "request", return_value=identity) as request:
+                with self.assertRaisesRegex(release.Failure, "does not match"):
+                    release.enable_pages(release.GitHub("example/game", account="test-owner"))
+                request.assert_called_once_with("GET", "https://api.github.com/user")
+
+    def test_account_absent_preserves_default_credential_behavior(self):
+        with patch.object(release, "credential", return_value="synthetic-value") as credential, \
+                patch.object(release.GitHub, "request") as request:
+            api = release.GitHub("example/game")
+        credential.assert_called_once_with()
+        request.assert_not_called()
+        self.assertIsNone(api.account)
+
+    def test_cli_every_subcommand_forwards_selected_account(self):
+        for command in ("inspect", "enable-pages", "release", "actions"):
+            argv = ["github_release.py", command, "--repo", "example/game", "--account", "test-owner"]
+            if command == "release":
+                argv += ["--tag", "v2", "--target", SHA, "--notes-file", "mock-notes", "--asset", "mock-zip"]
+            with self.subTest(command=command), patch.object(release.sys, "argv", argv), \
+                    patch.object(release, "GitHub") as github, \
+                    patch.object(release, "inspect", return_value={}), \
+                    patch.object(release, "enable_pages", return_value={}), \
+                    patch.object(release, "publish_release", return_value={}), \
+                    patch("builtins.print"):
+                github.return_value.request.return_value = {"workflow_runs": []}
+                release.main()
+                github.assert_called_once_with("example/game", account="test-owner")
+
+    def test_cli_identity_mismatch_stops_explicit_mutations(self):
+        for command in ("enable-pages", "release"):
+            argv = ["github_release.py", command, "--repo", "example/game", "--account", "test-owner"]
+            if command == "release":
+                argv += ["--tag", "v2", "--target", SHA, "--notes-file", "mock-notes", "--asset", "mock-zip", "--publish"]
+            with self.subTest(command=command), patch.object(release.sys, "argv", argv), \
+                    patch.object(release, "credential", return_value="synthetic-value"), \
+                    patch.object(release.GitHub, "request", return_value={"login": "other-owner"}) as request, \
+                    patch.object(release, "enable_pages") as pages, \
+                    patch.object(release, "publish_release") as publish:
+                with self.assertRaisesRegex(release.Failure, "does not match"):
+                    release.main()
+                request.assert_called_once_with("GET", "https://api.github.com/user")
+                pages.assert_not_called()
+                publish.assert_not_called()
+
     def test_missing_tag_does_not_query_commit_endpoint_that_returns_422(self):
         api = MagicMock()
         api.request.side_effect = [None, release.Failure("GitHub HTTP 422")]
