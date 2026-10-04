@@ -28,7 +28,7 @@ GitHub Actions `.github/workflows/web-pages.yml` 從乾淨公開來源建置，�
 
 2026-10-04 本機完整 `scripts/verify.ps1` 已 exit 0。實際 Chromium 桌面 1280×900、手機直向 390×844、手機橫向 844×390、平板 768×1024 合計 105 項瀏覽器斷言通過：實際 WebGL、四武器、超載、設定、失焦、多指搖桿／射擊獨立釋放與取消；桌面全新 profile 切斷網路後重載並啟動遊戲通過。這些是 Chrome 尺寸／觸控模擬，不是實機測試。
 
-Windows 1.1.0 原生包已實際匯出，headless 與 Windows 主視窗建立／存活／正常關閉皆通過。正式 Pages 子路徑与公開下載仍在發佈驗收；物理手機／手把類比軸及另一台乾淨 Windows 尚未實測。
+Windows 1.1.0 原生包已實際匯出，headless 與 Windows 主視窗建立／存活／正常關閉皆通過。正式 Pages 子路徑與匿名公開下載被 GitHub 帳戶限制阻擋，並未通過；物理手機／手把類比軸及另一台乾淨 Windows 尚未實測。
 
 真實瀏覽器畫面：[桌面](screenshots/web-desktop.png)、[手機直向](screenshots/web-phone-portrait.png)、[手機橫向](screenshots/web-phone-landscape.png)、[平板](screenshots/web-tablet.png)。
 
@@ -36,4 +36,14 @@ Windows 1.1.0 原生包已實際匯出，headless 與 Windows 主視窗建立／
 
 兩輪 DashScope `qwen3.8-flash` 真實回覆完成，最終沒有新的 evidence-backed blocker。Codex 未把模型一致當成測試證據：`limit_length` 速度指控、設定失焦不釋放、單執行緒仍必須隔離標頭、EXIF 才能证明素材授權等假說，由程式／官方版本與真實驗收反證。有效回饋促成動作後即時 Web 遙測，以及首次完整離線快取的驗證。
 
-發佈 helper 補上草稿最後 tag identity 及發佈後 metadata／全部 ZIP digest 再讀；不可聲稱阻止其他有管理權限的人並行改動 GitHub。服務端並發不是客戶端可保證的原子交易，若公開後發現不一致會報需要人工檢查、不自動刪版本。獨立代理再驗證指標鍵盤失焦及 public snapshot 安全；永久 24 項離線發佈安全測試通過。iPhone 音訊與實體平台差異保留為驗收限制，不冒稱完成。
+API 修正後另取得 Qwen 精簡最終 verdict：PASS、finish_reason=stop；它明確只根據提供的描述與證據，不能認證未展示的原始碼。獨立代理和 Codex 已直接檢查實作與 31 項回歸，不把模型判詞当作 GitHub 部署或匿名下載成功。
+
+發佈 helper 補上草稿最後 tag identity 及發佈後 metadata／全部 ZIP digest 再讀；不可聲稱阻止其他有管理權限的人並行改動 GitHub。服務端並發不是客戶端可保證的原子交易，若公開後發現不一致會報需要人工檢查、不自動刪版本。實際 API 的不存在 tag `/commits/` 回傳 422，已改先查 `/git/ref/tags/`，存在時仍解析 annotated tag 並拒絕競態錯誤。另補直接 `/releases/tags/` 檢查防止空列舉下重建公開版本；`--draft-id` 只續作確切且通過身分檢查的草稿，找不到不回退建立。獨立代理審查與永久 31 項離線發佈安全測試通過。iPhone 音訊與實體平台差異保留為驗收限制，不冒稱完成。
+
+## GitHub 外部阻擋
+
+public 來源 `9e805c07ee580f5093049359b180d3ac8012f601` 已正常 fast-forward 推送，240 個 Git blob／mode 與安全來源完全一致，歷史只有既有公開根與新快照兩個 commit。未推送私人祖先、參考圖、金鑰、build 或其他專案。
+
+GitHub API 顯示 repo public、Actions enabled／allowed all、workflow active、Pages workflow 模式，但實際 dispatch 回傳 HTTP 422，訊息包含 user／Actions／disabled；沒有任何 workflow run／check。匿名 API、專案頁、raw README、Pages 全部 HTTP 404。可證實外部限制，不能由此推斷帳戶遭限制的原因，也未宣稱是免費額度耗盡。
+
+[GitHub 官方說明](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository)：GitHub 控制的帳戶停用狀態不是調整 repo Actions 設定就能解除，需聯絡 Support。未付費、變更安全設定、替換帳戶或擅自部署其他服務。解除後需重新觸發此 workflow、確認 build／deploy 實際成功，再跑公開子路徑／離線瀏覽器及匿名下載測試；這些驗收目前未完成。

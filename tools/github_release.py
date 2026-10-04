@@ -5,6 +5,7 @@ inspect/actions are read-only. enable-pages and release are explicit mutations.
 release requires absolute notes/ZIP paths and a full commit on the public default
 branch. It never replaces assets or modifies published releases. Repeat the same
 command with --publish only after reviewing the verified draft output.
+Use --draft-id to resume a known draft when release enumeration is incomplete.
 GitHub metadata writes are not atomic against concurrent privileged writers; use
 an exclusively managed draft. Post-publication checks detect mismatches but never
 delete or silently roll back an already-public release.
@@ -129,11 +130,34 @@ def input_file(value, suffix=None):
     return path.resolve(strict=True)
 
 
+def resolve_tag(api, tag):
+    """Test tag existence without treating /commits' missing-ref HTTP 422 as 404."""
+    encoded = urllib.parse.quote(tag, safe="")
+    if api.request("GET", "/git/ref/tags/" + encoded, missing=True) is None:
+        return None
+    # The ref object may point at an annotated-tag object, not the final commit.
+    # Resolve it through the commits API; deletion or other races must fail closed.
+    return api.request("GET", "/commits/" + encoded)
+
+
+def positive_int(value):
+    try:
+        result = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError("Must be a positive integer.") from None
+    if result <= 0:
+        raise argparse.ArgumentTypeError("Must be a positive integer.")
+    return result
+
+
 def publish_release(api, args):
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,99}", args.tag):
         raise Failure("Use a simple version tag containing letters, digits, dot, dash or underscore.")
     if not re.fullmatch(r"[0-9a-f]{40}", args.target):
         raise Failure("Target must be the complete lowercase public commit SHA.")
+    draft_id = getattr(args, "draft_id", None)
+    if draft_id is not None and (type(draft_id) is not int or draft_id <= 0):
+        raise Failure("Draft ID must be a positive integer.")
     notes_path = input_file(args.notes_file)
     if notes_path.stat().st_size > 200000:
         raise Failure("Release notes exceed the size limit.")
@@ -149,6 +173,11 @@ def publish_release(api, args):
         assets.append((path, size, "sha256:" + digest))
     if len({p.name for p, _, _ in assets}) != len(assets):
         raise Failure("Duplicate release asset names are not allowed.")
+    # Enumeration can be incomplete even with valid authentication. Check the
+    # direct tag endpoint first so an existing publication is never recreated.
+    tagged_release = api.request("GET", "/releases/tags/" + urllib.parse.quote(args.tag, safe=""), missing=True)
+    if tagged_release is not None and tagged_release.get("draft") is not True:
+        raise Failure("Refusing to modify or recreate an already published release.")
     repo = api.request("GET", "")
     if repo.get("visibility") != "public":
         raise Failure("This helper publishes only already-public repositories.")
@@ -156,20 +185,26 @@ def publish_release(api, args):
     comparison = api.request("GET", "/compare/" + args.target + "..." + branch)
     if comparison.get("status") not in ("ahead", "identical"):
         raise Failure("Target is not an ancestor of the public default branch.")
-    tag = api.request("GET", "/commits/" + args.tag, missing=True)
+    tag = resolve_tag(api, args.tag)
     if tag and tag.get("sha") != args.target:
         raise Failure("Existing tag resolves to another commit; refusing to move it.")
     owner = api.request("GET", "https://api.github.com/user")["login"]
     marker = "<!-- thunder-vector-release target=" + args.target + " -->"
-    existing = None
-    for page in range(1, 11):
-        releases = api.request("GET", "/releases?per_page=100&page=" + str(page))
-        existing = next((r for r in releases if r.get("tag_name") == args.tag), None)
-        if existing or len(releases) < 100:
-            break
-    else:
-        raise Failure("Release lookup exceeded 1000 entries; refusing ambiguous creation.")
+    existing = tagged_release
+    if draft_id is not None:
+        existing = api.request("GET", "/releases/" + str(draft_id), missing=True)
+        if existing is None or existing.get("id") != draft_id:
+            raise Failure("Explicit draft ID was not found; refusing fallback creation.")
+    elif existing is None:
+        for page in range(1, 11):
+            releases = api.request("GET", "/releases?per_page=100&page=" + str(page))
+            existing = next((r for r in releases if r.get("tag_name") == args.tag), None)
+            if existing or len(releases) < 100:
+                break
+        else:
+            raise Failure("Release lookup exceeded 1000 entries; refusing ambiguous creation.")
     if existing and (not existing.get("draft") or existing.get("author", {}).get("login") != owner
+                     or existing.get("tag_name") != args.tag
                      or marker not in (existing.get("body") or "")
                      or existing.get("target_commitish") != args.target):
         raise Failure("Refusing to modify a published or unrelated release.")
@@ -206,7 +241,7 @@ def publish_release(api, args):
             or len(final_assets) != len(expected) or actual != expected):
         raise Failure("Draft changed or final asset verification failed; refusing publication.")
     if args.publish:
-        tag = api.request("GET", "/commits/" + args.tag, missing=True)
+        tag = resolve_tag(api, args.tag)
         if tag and tag.get("sha") != args.target:
             raise Failure("Tag changed during upload; draft preserved.")
         api.request("PATCH", endpoint, {"draft": False})
@@ -238,6 +273,7 @@ def main():
             sub.add_argument("--target", required=True)
             sub.add_argument("--notes-file", required=True)
             sub.add_argument("--asset", required=True, action="append")
+            sub.add_argument("--draft-id", type=positive_int, help="Resume only this known owned draft; never create a fallback")
             sub.add_argument("--publish", action="store_true", help="Publish only after upload verification")
         if name == "actions":
             sub.add_argument("--run-id", type=int, help="Optional single workflow run status")

@@ -43,7 +43,8 @@ class FakeGitHub:
     base = "https://api.github.com/repos/example/game"
 
     def __init__(self, *, existing=None, comparison="ahead", pre_change=None,
-                 post_change=None, upload_digest=DIGEST, changed_tag=False):
+                 post_change=None, upload_digest=DIGEST, changed_tag=False,
+                 tagged_release=None, hidden_list=False):
         self.existing = existing
         self.comparison = comparison
         self.pre_change = pre_change
@@ -51,6 +52,9 @@ class FakeGitHub:
         self.upload_digest = upload_digest
         self.changed_tag = changed_tag
         self.tag_reads = 0
+        self.tagged_release = tagged_release
+        self.hidden_list = hidden_list
+        self.release_started = False
         self.assets = []
         self.published = False
         self.calls = []
@@ -74,13 +78,21 @@ class FakeGitHub:
             return {"visibility": "public", "default_branch": "main"}
         if path.startswith("/compare/"):
             return {"status": self.comparison}
-        if path.startswith("/commits/"):
+        if path.startswith("/git/ref/tags/"):
             self.tag_reads += 1
-            return {"sha": PUBLIC} if self.changed_tag and self.tag_reads > 1 else None
+            return {"object": {"type": "commit", "sha": PUBLIC}} if self.changed_tag and self.tag_reads > 1 else None
+        if path.startswith("/commits/"):
+            if self.changed_tag and self.tag_reads > 1:
+                return {"sha": PUBLIC}
+            raise release.Failure("GitHub HTTP 422; missing commit ref must not be queried.")
         if path.endswith("/user"):
             return {"login": "test-owner"}
+        if path.startswith("/releases/tags/"):
+            return self.tagged_release
         if path.startswith("/releases?"):
-            return [self.existing] if self.existing else []
+            return [self.existing] if self.existing and not self.hidden_list else []
+        if method == "GET" and path.startswith("/releases/") and "/assets?" not in path and not self.release_started:
+            return self.existing if self.existing and path == "/releases/" + str(self.existing["id"]) else None
         if "/assets?" in path:
             if method == "POST":
                 asset = {"name": "release.zip", "size": len(PAYLOAD),
@@ -95,6 +107,8 @@ class FakeGitHub:
             return assets
         if method == "PATCH" and payload == {"draft": False}:
             self.published = True
+        if method in ("POST", "PATCH") and path.startswith("/releases"):
+            self.release_started = True
         return self.metadata()
 
 
@@ -111,6 +125,57 @@ class ReleaseTests(unittest.TestCase):
         self.assertTrue(result["draft"])
         self.assertFalse(api.published)
         self.assertEqual(result["verified_uploads"][0]["sha256"], DIGEST[7:])
+        self.assertFalse(any(path.startswith("/commits/") for _, path, _ in api.calls))
+
+    def test_published_release_by_tag_refused_when_list_is_hidden(self):
+        published = dict(FakeGitHub().metadata(), draft=False)
+        for draft_id in (None, 7):
+            with self.subTest(draft_id=draft_id):
+                self.args.draft_id = draft_id
+                api = FakeGitHub(tagged_release=published, hidden_list=True)
+                with self.assertRaisesRegex(release.Failure, "already published"):
+                    release.publish_release(api, self.args)
+                self.assertEqual([(method, path) for method, path, _ in api.calls],
+                                 [("GET", "/releases/tags/v2")])
+
+    def test_known_draft_id_resumes_without_list_or_creation(self):
+        self.args.draft_id = 7
+        for publish in (False, True):
+            with self.subTest(publish=publish):
+                self.args.publish = publish
+                api = FakeGitHub(existing=FakeGitHub().metadata(), hidden_list=True)
+                api.assets = [{"name": "release.zip", "size": len(PAYLOAD), "digest": DIGEST, "state": "uploaded"}]
+                result = release.publish_release(api, self.args)
+                self.assertEqual(result["id"], 7)
+                self.assertEqual(result["draft"], not publish)
+                self.assertFalse(any(method == "POST" or path.startswith("/releases?") for method, path, _ in api.calls))
+                self.assertTrue(any(method == "PATCH" and path == "/releases/7" for method, path, _ in api.calls))
+
+    def test_missing_or_wrong_explicit_draft_never_falls_back_to_creation(self):
+        for existing in (None, dict(FakeGitHub().metadata(), id=8),
+                         dict(FakeGitHub().metadata(), draft=False),
+                         dict(FakeGitHub().metadata(), tag_name="other-tag"),
+                         dict(FakeGitHub().metadata(), author={"login": "another-owner"}),
+                         dict(FakeGitHub().metadata(), target_commitish=PUBLIC),
+                         dict(FakeGitHub().metadata(), body="unrelated")):
+            with self.subTest(existing=existing):
+                self.args.draft_id = 7
+                api = FakeGitHub(existing=existing, hidden_list=True)
+                with self.assertRaises(release.Failure):
+                    release.publish_release(api, self.args)
+                self.assertTrue(all(method == "GET" for method, _, _ in api.calls))
+                self.assertFalse(any(path.startswith("/releases?") for _, path, _ in api.calls))
+
+    def test_draft_id_must_be_positive(self):
+        self.assertEqual(release.positive_int("7"), 7)
+        for value in ("0", "-7", "not-an-id"):
+            with self.subTest(value=value), self.assertRaises(release.argparse.ArgumentTypeError):
+                release.positive_int(value)
+        self.args.draft_id = 0
+        api = FakeGitHub()
+        with self.assertRaisesRegex(release.Failure, "positive integer"):
+            release.publish_release(api, self.args)
+        self.assertFalse(api.calls)
 
     def test_explicit_publish_verifies_authoritative_assets(self):
         self.args.publish = True
@@ -192,6 +257,28 @@ class ReleaseTests(unittest.TestCase):
 
 
 class AuthenticationTests(unittest.TestCase):
+    def test_missing_tag_does_not_query_commit_endpoint_that_returns_422(self):
+        api = MagicMock()
+        api.request.side_effect = [None, release.Failure("GitHub HTTP 422")]
+        self.assertIsNone(release.resolve_tag(api, "v1.1.0"))
+        api.request.assert_called_once_with("GET", "/git/ref/tags/v1.1.0", missing=True)
+
+    def test_annotated_tag_resolves_final_commit_not_tag_object(self):
+        api = MagicMock()
+        tag_object = "c" * 40
+        api.request.side_effect = [{"object": {"type": "tag", "sha": tag_object}}, {"sha": SHA}]
+        self.assertEqual(release.resolve_tag(api, "v1.1.0"), {"sha": SHA})
+        self.assertEqual([call.args for call in api.request.call_args_list],
+                         [("GET", "/git/ref/tags/v1.1.0"), ("GET", "/commits/v1.1.0")])
+        self.assertNotIn("missing", api.request.call_args_list[-1].kwargs)
+
+    def test_existing_tag_resolution_failure_is_not_treated_as_missing(self):
+        api = MagicMock()
+        api.request.side_effect = [{"object": {"type": "tag", "sha": PUBLIC}},
+                                   release.Failure("GitHub HTTP 422")]
+        with self.assertRaisesRegex(release.Failure, "422"):
+            release.resolve_tag(api, "v1.1.0")
+
     def test_inspect_is_read_only_and_pages_requires_explicit_command(self):
         api = MagicMock(scopes=["repo"])
         api.request.side_effect = [{"visibility": "public"}, None, []]
