@@ -30,6 +30,7 @@
     #offline-info { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px; padding:0 0 5px; color:#a9c5d3; font-size:12px; }
     #offline-retry { padding:4px 12px; }
     #mobile-status { display:none; flex-wrap:wrap; justify-content:center; gap:6px 16px; padding:8px; min-height:38px; background:#091f30; font-size:15px; font-weight:650; border-radius:8px; }
+    #status-mission { flex-basis:100%; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#8ef0cd; font-size:13px; }
     #controls { display:none; border:0; min-width:0; padding:8px 0 0; margin:0; gap:10px; grid-template-columns:128px 1fr; align-items:center; }
     .touch-on #controls { display:grid; }
     .touch-on #mobile-status { display:flex; }
@@ -63,7 +64,7 @@
     </section>
     <div id="message" role="status" aria-live="polite">桌機與手機皆可遊玩；需要 WebGL 2 與 WebAssembly。</div>
     <div id="offline-info"><span id="offline-status" role="status">離線快取：開始遊戲後準備</span><button id="offline-retry" type="button" hidden>重試離線快取</button></div>
-    <div id="mobile-status" aria-label="遊戲狀態"><span id="status-hp">生命 —</span><span id="status-score">分數 0</span><span id="status-weapon">武器 1</span><span id="status-charge">超載 —</span><span id="status-mode">待命</span></div>
+    <div id="mobile-status" aria-label="遊戲狀態"><span id="status-hp">生命 —</span><span id="status-score">分數 0</span><span id="status-weapon">武器 1</span><span id="status-charge">超載 —</span><span id="status-mode">待命</span><span id="status-mission">戰術任務準備中</span></div>
     <fieldset id="controls" disabled aria-label="觸控操作">
       <div id="stick" role="application" aria-label="八方向移動搖桿"><span id="knob"></span></div>
       <div class="actions">
@@ -132,7 +133,7 @@
     let width = shell.clientWidth - parseFloat(padding.paddingLeft) - parseFloat(padding.paddingRight);
     if (innerWidth > innerHeight || !window.thunderDeviceTouch) {
       const reserved = document.querySelector('header').offsetHeight + message.offsetHeight + document.getElementById('offline-info').offsetHeight + controls.offsetHeight + document.getElementById('mobile-status').offsetHeight + 36;
-      width = Math.min(width, Math.max(150, innerHeight - reserved) * 16 / 9);
+      width = Math.min(width, Math.max(96, innerHeight - reserved) * 16 / 9);
     }
     document.getElementById('stage').style.width = Math.floor(Math.max(160, width)) + 'px';
     // Keep the engine's logical render/input size fixed. CSS scales the 16:9 view.
@@ -240,11 +241,14 @@
       if (!('hp' in next)) return;
       if ((next.paused || next.dead || next.settings) && !(state.paused || state.dead || state.settings)) releaseAll();
       state = next;
+      const statusHeight = document.getElementById('mobile-status').offsetHeight;
       document.getElementById('status-hp').textContent = '生命 ' + next.hp;
       document.getElementById('status-score').textContent = '分數 ' + next.score;
       document.getElementById('status-weapon').textContent = ['','機砲','導彈','閃電','雷射'][next.weapon_mode] || '武器';
       document.getElementById('status-charge').textContent = next.overdrive_seconds > 0 ? '超載 ' + Math.ceil(next.overdrive_seconds) + ' 秒' : '充能 ' + Math.floor(next.overdrive_charge) + '%';
       document.getElementById('status-mode').textContent = next.dead ? '任務結束・按重開' : next.settings ? '設定中' : next.paused ? '已暫停・按繼續' : '戰區 ' + (Number(next.sector) + 1);
+      document.getElementById('status-mission').textContent = (next.event_warning ? next.event_warning + ' · ' : '') + (next.mission_title || '戰術任務') + ' ' + (next.mission_phase === 'complete' ? '完成' : next.mission_phase === 'failed' ? '逾時' : (next.mission_progress || 0) + '/' + (next.mission_target || 0) + ' · ' + (next.mission_seconds || 0) + '秒');
+      if (statusHeight !== document.getElementById('mobile-status').offsetHeight) resizeStage();
       const navigation = document.getElementById('settings-nav');
       if (navigation.hidden === Boolean(next.settings)) { navigation.hidden = !next.settings; resizeStage(); }
     } catch (_) { /* A not-yet-published bridge snapshot is harmless. */ }

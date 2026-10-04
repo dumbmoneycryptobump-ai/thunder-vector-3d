@@ -39,6 +39,13 @@ REQUIRED = [
     "game/scripts/sector_scenery.gd",
     "game/scripts/sector_route.gd",
     "game/scripts/weapon_system.gd",
+    "game/scripts/mission_director.gd",
+    "game/scripts/world_events.gd",
+    "game/scripts/mission_presentation.gd",
+    "game/tests/mission_director_test.gd",
+    "game/tests/world_events_test.gd",
+    "game/tests/tactical_integration_test.gd",
+    "game/tests/capture_tactical_preview.gd",
     "game/tests/weapon_system_test.gd",
     "game/tests/weapon_stress.gd",
     "game/tests/capture_weapon_preview.gd",
@@ -210,8 +217,8 @@ def main() -> int:
         expected_settings = [
             'binary_format/architecture="x86_64"',
             'binary_format/embed_pck=true',
-            'application/file_version="1.1.0.0"',
-            'application/product_version="1.1.0.0"',
+            'application/file_version="1.2.0.0"',
+            'application/product_version="1.2.0.0"',
             'exclude_filter="tests/*"',
         ]
         missing_settings = [setting for setting in expected_settings if setting not in text]

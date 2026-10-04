@@ -11,7 +11,7 @@ $Root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $Game = Join-Path $Root "game"
 $Build = Join-Path $Root "build"
 if ($OutputSubdirectory) { $Build = Join-Path $Build $OutputSubdirectory }
-$Version = "1.1.0"
+$Version = "1.2.0"
 $ReleaseName = "ThunderVector3D-$Version-windows-x86_64"
 
 

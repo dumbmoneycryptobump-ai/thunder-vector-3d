@@ -26,6 +26,9 @@ const SECTOR_SCENERY_SCRIPT := preload("res://scripts/sector_scenery.gd")
 const SECTOR_ROUTE_SCRIPT := preload("res://scripts/sector_route.gd")
 const SPECIAL_WEAPONS_SCRIPT := preload("res://scripts/weapon_system.gd")
 const DEVICE_CONTROLS_SCRIPT := preload("res://scripts/device_controls.gd")
+const MISSION_DIRECTOR_SCRIPT := preload("res://scripts/mission_director.gd")
+const WORLD_EVENTS_SCRIPT := preload("res://scripts/world_events.gd")
+const MISSION_PRESENTATION_SCRIPT := preload("res://scripts/mission_presentation.gd")
 const PLANET_TEXTURE: Texture2D = preload("res://assets/generated/orbital_planet_imagegen_v1.png")
 const SETTINGS_STORE_SCRIPT := preload("res://scripts/settings_store.gd")
 const VISUAL_FACTORY_SCRIPT := preload("res://scripts/visual_factory.gd")
@@ -55,6 +58,16 @@ var _web_move := Vector2.ZERO
 var _web_fire := false
 var _web_state_timer := 0.0
 var _device_hud_panels: Array[Control] = []
+var mission_director: RefCounted
+var world_events: Node3D
+var mission_presentation: Control
+var ui_mission: Label
+var _mission_ui_key := ""
+var _event_warning := ""
+var _mission_last_reward_serial := -1
+var _beacon_timer := 12.0
+var _compact_mission := false
+var _mission_damage_pending := false
 
 var score := 0
 var level := 1
@@ -197,12 +210,17 @@ func _ready() -> void:
     visual_factory = VISUAL_FACTORY_SCRIPT.new()
     encounter_director = ENCOUNTER_DIRECTOR_SCRIPT.new()
     arsenal = ARSENAL_SCRIPT.new()
+    mission_director = MISSION_DIRECTOR_SCRIPT.new()
     _prewarm_pools()
     _create_environment()
     arcade_feedback = ARCADE_FEEDBACK_SCRIPT.new()
     add_child(arcade_feedback)
     arcade_feedback.setup(camera)
     _create_arena()
+    world_events = WORLD_EVENTS_SCRIPT.new()
+    world_events.name = "TacticalWorldEvents"
+    add_child(world_events)
+    world_events.setup()
     _create_player()
     _create_wingmen()
     special_weapons = SPECIAL_WEAPONS_SCRIPT.new()
@@ -233,6 +251,10 @@ func prepare_for_shutdown() -> void:
         arcade_feedback.clear()
     if is_instance_valid(special_weapons):
         special_weapons.clear()
+    if is_instance_valid(world_events):
+        world_events.clear()
+    if is_instance_valid(mission_presentation):
+        mission_presentation.clear()
     sfx_laser = null
     sfx_explosion = null
     sfx_pickup = null
@@ -267,6 +289,11 @@ func _setup_device_controls() -> void:
         get_viewport().scaling_3d_scale = 0.75
     var compact: bool = device_controls.is_enabled() or (_web_window != null and bool(_web_window.thunderDeviceTouch))
     if compact:
+        _compact_mission = true
+        ui_mission.position = Vector2(455.0, 24.0)
+        ui_mission.size = Vector2(485.0, 115.0)
+        ui_mission.add_theme_font_size_override("font_size", 25)
+        ui_mission.visible = _web_window == null
         for panel in _device_hud_panels:
             panel.visible = false
         for label in [ui_level, ui_arsenal, ui_overdrive, ui_combo, ui_weapon, ui_shield, ui_sector]:
@@ -315,7 +342,8 @@ func _release_device_inputs() -> void:
 
 func _publish_web_state() -> void:
     if _web_window != null:
-        _web_window.thunderStateJson = JSON.stringify({"hp": hp, "score": score, "weapon_mode": weapon_mode, "overdrive_charge": overdrive_charge, "overdrive_seconds": overdrive_timer, "paused": is_paused, "dead": is_game_over, "settings": settings_open, "sector": sector_index})
+        var mission: Dictionary = mission_director.get_state()
+        _web_window.thunderStateJson = JSON.stringify({"hp": hp, "score": score, "weapon_mode": weapon_mode, "overdrive_charge": overdrive_charge, "overdrive_seconds": overdrive_timer, "paused": is_paused, "dead": is_game_over, "settings": settings_open, "sector": sector_index, "mission_title": mission["title"], "mission_progress": mission["progress"], "mission_target": mission["target"], "mission_seconds": ceili(float(mission["remaining"])), "mission_phase": mission["phase"], "event_warning": _event_warning})
 
 
 func _device_action(action: String, pressed: bool = true) -> bool:
@@ -416,6 +444,9 @@ func _physics_process(delta: float) -> void:
     special_weapons.advance(delta)
     _update_pickups(delta)
     _resolve_collisions()
+    if is_game_over:
+        return
+    _update_missions(delta)
     if is_game_over:
         return
 
@@ -760,6 +791,18 @@ func _create_ui() -> void:
     ui_sector.size = Vector2(370.0, 68.0)
     ui_sector.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     canvas.add_child(ui_sector)
+    var mission_panel := ColorRect.new()
+    mission_panel.position = Vector2(455.0, 99.0)
+    mission_panel.size = Vector2(375.0, 98.0)
+    mission_panel.color = Color(0.005, 0.028, 0.06, 0.86)
+    mission_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    canvas.add_child(mission_panel)
+    _device_hud_panels.append(mission_panel)
+    ui_mission = _label(Vector2(467.0, 106.0), 17, Color("c3f7eb"))
+    ui_mission.size = Vector2(351.0, 87.0)
+    canvas.add_child(ui_mission)
+    mission_presentation = MISSION_PRESENTATION_SCRIPT.new()
+    canvas.add_child(mission_presentation)
     map_route = SECTOR_ROUTE_SCRIPT.new()
     map_route.position = Vector2(22.0, 359.0)
     canvas.add_child(map_route)
@@ -1087,6 +1130,7 @@ func _fire_special_weapon() -> int:
     volley_count += 1
     _sync_player_bullet_batch()
     _play_sfx(sfx_laser, -12.0)
+    mission_director.record_weapon(weapon_mode)
     return last_volley_size
 
 
@@ -1117,6 +1161,8 @@ func _start_overdrive() -> bool:
         return false
     overdrive_charge = 0.0
     overdrive_timer = OVERDRIVE_DURATION
+    mission_director.record_overdrive()
+    mission_presentation.show_notice("百發超載啟動", "僚機協同齊射 · 持續 6 秒", Color("ffe09b"), 1.6)
     shot_timer = 0.0
     arcade_feedback.pulse(player.position, Color("ffe3a4"), 1.4)
     _play_sfx(sfx_pickup, -7.0)
@@ -1406,6 +1452,7 @@ func _build_heavy(enemy: Node3D) -> void:
 
 func _spawn_boss() -> void:
     boss_active = true
+    mission_presentation.show_notice("警告 · 巨型敵機接近", "擊破核心 · 奪回下一戰區", Color("ff809b"), 3.0)
     var boss := Node3D.new()
     boss.name = "BossCore"
     _enemy_activation_serial += 1
@@ -1611,6 +1658,8 @@ func _damage_enemy(enemy: Node3D, amount: int) -> void:
     combo += 1
     best_combo = maxi(best_combo, combo)
     combo_timer = 3.0
+    var archetype := str(enemy.get_meta("archetype", "standard"))
+    mission_director.record_kill(archetype in ["interceptor", "bomber"], is_boss, combo)
     if overdrive_timer <= 0.0:
         overdrive_charge = minf(100.0, overdrive_charge + (2.5 if fodder else 5.0))
     level = 1 + score / 1300
@@ -1652,6 +1701,9 @@ func _damage_player(amount: int) -> void:
         _update_ui()
         return
     hp -= amount
+    if amount > 0:
+        mission_director.record_damage()
+        _mission_damage_pending = true
     arcade_feedback.pulse(player.position, Color("ff4772"), 1.2)
     combo = 0
     combo_timer = 0.0
@@ -1691,6 +1743,7 @@ func _spawn_pickup(position_value: Vector3, kind: String) -> void:
 
 
 func _collect_pickup(pickup: Node3D) -> void:
+    mission_director.record_pickup()
     var kind := str(pickup.get_meta("kind", "power"))
     if overdrive_timer <= 0.0:
         overdrive_charge = minf(100.0, overdrive_charge + 10.0)
@@ -1735,6 +1788,9 @@ func _spawn_explosion(position_value: Vector3, color: Color, scale_factor: float
 func _game_over() -> void:
     _release_device_inputs()
     is_game_over = true
+    world_events.clear()
+    mission_presentation.clear()
+    _event_warning = ""
     special_weapons.clear()
     overdrive_timer = 0.0
     _update_wingmen(0.0)
@@ -1764,6 +1820,14 @@ func _restart_game() -> void:
     arcade_feedback.clear()
     special_weapons.clear()
     weapon_mode = 1
+    mission_director.reset()
+    world_events.reset()
+    mission_presentation.clear()
+    _event_warning = ""
+    _beacon_timer = 12.0
+    _mission_last_reward_serial = -1
+    _mission_ui_key = ""
+    _mission_damage_pending = false
     for node in get_tree().get_nodes_in_group("pickup"):
         if is_instance_valid(node):
             node.queue_free()
@@ -1817,6 +1881,64 @@ func _restart_game() -> void:
     _update_ui()
 
 
+func _update_missions(delta: float) -> void:
+    if is_paused or is_game_over or not is_finite(delta) or delta < 0.0:
+        return
+    mission_presentation.advance(delta)
+    var world: Dictionary = world_events.advance(delta, player.position, not boss_active)
+    _event_warning = str(world.get("warning", ""))
+    if int(world.get("damage", 0)) > 0:
+        _damage_player(1)
+        if is_game_over:
+            return # A lethal hazard cannot award progress/rewards in this frame.
+    for index in range(int(world.get("beacons", 0))):
+        mission_director.record_beacon()
+        score += 125
+        if overdrive_timer <= 0.0:
+            overdrive_charge = minf(100.0, overdrive_charge + 12.0)
+        arcade_feedback.pulse(player.position, Color("70ffe1"), 0.8)
+        _play_sfx(sfx_pickup, -6.0)
+    if not boss_active:
+        _beacon_timer -= maxf(0.0, delta)
+        if _beacon_timer <= 0.0:
+            _beacon_timer = 28.0 if world_events.spawn_beacons() else 1.0
+    mission_director.record_chain(combo)
+    var rescue_held: bool = boss_active and mission_director.get_state()["metric"] == "beacons" and mission_director.get_state()["phase"] == "active"
+    if rescue_held:
+        _event_warning = "首領交戰：救援任務暫停"
+    else:
+        mission_director.advance(delta, not _mission_damage_pending)
+    _mission_damage_pending = false
+    for event: Dictionary in mission_director.drain_events():
+        if event["type"] == "completed":
+            var serial := int(event["serial"])
+            if serial <= _mission_last_reward_serial:
+                continue
+            _mission_last_reward_serial = serial
+            var bonus := int(event["reward_score"])
+            score += bonus
+            if overdrive_timer <= 0.0:
+                overdrive_charge = minf(100.0, overdrive_charge + float(event["reward_charge"]))
+            mission_presentation.show_notice("任務完成 · " + str(event["title"]), "獎勵 +%d 分 · 超載補充" % bonus, Color("8effcf"))
+            _play_sfx(sfx_pickup, -4.0)
+        elif event["type"] == "failed":
+            mission_presentation.show_notice("任務時限結束", "新目標即將派發 · 可繼續戰鬥", Color("ffc783"), 2.0)
+        elif event["type"] == "started" and event["metric"] == "beacons":
+            world_events.spawn_beacons()
+    _update_mission_ui()
+
+
+func _update_mission_ui() -> void:
+    var state: Dictionary = mission_director.get_state()
+    var marker := "完成" if state["phase"] == "complete" else ("逾時" if state["phase"] == "failed" else "%d/%d · %02d秒" % [int(state["progress"]), int(state["target"]), ceili(float(state["remaining"]))])
+    var text := "戰術任務 · %s\n%s" % [str(state["title"]), marker]
+    if not _compact_mission:
+        text += "\n" + (_event_warning if not _event_warning.is_empty() else str(state["description"]))
+    if text != _mission_ui_key:
+        _mission_ui_key = text
+        ui_mission.text = text
+
+
 func _set_sector(index: int) -> void:
     sector_index = clampi(index, 0, 2)
     map_scenery.set_sector(sector_index)
@@ -1847,6 +1969,7 @@ func _update_sector_ui() -> void:
 
 
 func _update_ui() -> void:
+    _update_mission_ui()
     map_route.update_state(sector_index, kills, next_boss_kill_target, boss_active, is_game_over)
     var profile: Dictionary = arsenal.get_profile(weapon_rank, overdrive_timer > 0.0)
     var arcade_key := "%d/%d/%d/%d/%d/%d/%d" % [weapon_rank, ceili(overdrive_timer), int(overdrive_charge), combo, best_combo, int(is_game_over), weapon_mode]

@@ -92,6 +92,9 @@ if ($godotPath) {
     Invoke-GodotCheck -Label "Godot expanded edge/lifetime/capacity test" -GodotPath $godotPath -GodotArguments @("--headless", "--path", $Game, "--script", "res://tests/expanded_edge_test.gd")
     Invoke-GodotCheck -Label "Godot multi-touch ownership test" -GodotPath $godotPath -GodotArguments @("--headless", "--path", $Game, "--script", "res://tests/device_controls_test.gd")
     Invoke-GodotCheck -Label "Godot cross-device main integration test" -GodotPath $godotPath -GodotArguments @("--headless", "--path", $Game, "--script", "res://tests/device_integration_test.gd")
+    Invoke-GodotCheck -Label "Godot mission state/catalog test" -GodotPath $godotPath -GodotArguments @("--headless", "--path", $Game, "--script", "res://tests/mission_director_test.gd")
+    Invoke-GodotCheck -Label "Godot bounded world event test" -GodotPath $godotPath -GodotArguments @("--headless", "--path", $Game, "--script", "res://tests/world_events_test.gd")
+    Invoke-GodotCheck -Label "Godot tactical mission integration test" -GodotPath $godotPath -GodotArguments @("--headless", "--path", $Game, "--script", "res://tests/tactical_integration_test.gd")
     Invoke-GodotCheck -Label "Godot 15-second main-scene smoke test" -GodotPath $godotPath -GodotArguments @("--headless", "--path", $Game, "--fixed-fps", "60", "--quit-after", "1200", "--script", "res://tests/headless_smoke.gd")
 } else {
     throw "Godot 4.7.2 was not found; static checks passed, but parser/runtime validation was not completed."
