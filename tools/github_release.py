@@ -286,7 +286,8 @@ def main():
     for name in ("inspect", "enable-pages", "release", "actions"):
         sub = commands.add_parser(name)
         sub.add_argument("--repo", required=True, help="GitHub OWNER/REPOSITORY")
-        sub.add_argument("--account", help="Select an existing GCM username and verify its GitHub API identity; never log in")
+        sub.add_argument("--account", required=name in ("enable-pages", "release"),
+                         help="Select an existing GCM username and verify its GitHub API identity; required for writes, never log in")
         if name == "release":
             sub.add_argument("--tag", required=True)
             sub.add_argument("--target", required=True)

@@ -331,6 +331,32 @@ class AuthenticationTests(unittest.TestCase):
                 pages.assert_not_called()
                 publish.assert_not_called()
 
+    def test_cli_mutations_require_account_before_any_authentication(self):
+        for command in ("enable-pages", "release"):
+            argv = ["github_release.py", command, "--repo", "example/game"]
+            if command == "release":
+                argv += ["--tag", "v2", "--target", SHA, "--notes-file", "mock-notes", "--asset", "mock-zip", "--publish"]
+            stderr = io.StringIO()
+            with self.subTest(command=command), patch.object(release.sys, "argv", argv), \
+                    patch.object(release.sys, "stderr", stderr), \
+                    patch.object(release, "GitHub") as github:
+                with self.assertRaises(SystemExit) as caught:
+                    release.main()
+                self.assertEqual(caught.exception.code, 2)
+                self.assertIn("--account", stderr.getvalue())
+                github.assert_not_called()
+
+    def test_cli_readonly_commands_keep_account_optional(self):
+        for command in ("inspect", "actions"):
+            argv = ["github_release.py", command, "--repo", "example/game"]
+            with self.subTest(command=command), patch.object(release.sys, "argv", argv), \
+                    patch.object(release, "GitHub") as github, \
+                    patch.object(release, "inspect", return_value={}), \
+                    patch("builtins.print"):
+                github.return_value.request.return_value = {"workflow_runs": []}
+                release.main()
+                github.assert_called_once_with("example/game", account=None)
+
     def test_missing_tag_does_not_query_commit_endpoint_that_returns_422(self):
         api = MagicMock()
         api.request.side_effect = [None, release.Failure("GitHub HTTP 422")]
