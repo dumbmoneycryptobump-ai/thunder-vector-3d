@@ -2,9 +2,9 @@
 
 - [免安裝網頁](https://dumbmoneycryptobump-ai.github.io/thunder-vector-3d/index.html)：實際 Actions 建置／部署成功；正式網址遊戲啟動、四武器、觸控與離線重載通過。
 - [MIT 原始碼](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d)：匿名 repo API／raw README HTTP 200。
-- [版本下載](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d/releases/tag/v1.1.0)：新帳戶的發佈與匿名 ZIP 下載驗證尚未完成。
+- [版本下載](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d/releases/tag/v1.1.0)：v1.1.0 已公開，兩個 ZIP 未登入完整下載與 SHA-256 核對通過。
 
-Windows ZIP 解壓後執行 `ThunderVector3D.exe`，不需要安裝 Godot。Web ZIP 是可自行部署的網頁封包，需 HTTPS 或 localhost HTTP 服務；不是直接雙擊 HTML。首次完整快取後支援離線。目前以使用者確認的 `dumbmoneycryptobump-ai` 公開發佈；原 `Avery-TSE` 的限制僅留作下方歷史紀錄。新帳戶的 Release 發佈與匿名下載尚待驗收，不提前宣稱封包對外下載已通過。
+Windows ZIP 解壓後執行 `ThunderVector3D.exe`，不需要安裝 Godot。Web ZIP 是可自行部署的網頁封包，需 HTTPS 或 localhost HTTP 服務；不是直接雙擊 HTML。首次完整快取後支援離線。目前以使用者確認的 `dumbmoneycryptobump-ai` 公開發佈，兩包匿名完整下載皆已驗收；原 `Avery-TSE` 的限制僅留作下方歷史紀錄。
 
 同一遊戲支援鍵盤／滑鼠、獨立多指搖桿與射擊、手把按鍵；保留導彈、連鎖閃電、貫穿雷射、百發超載與僚機。手機／平板保留完整戰場和 48px+ 畫面外操作鈕，失焦自動釋放並暫停。首次完整下載且頁面顯示「離線資料已快取」後可以斷網重載。
 
@@ -23,19 +23,27 @@ Chromium 真實 WebGL 在桌面 1280×900、手機直向 390×844、手機橫向
 | ThunderVector3D-1.1.0-windows-x86_64.zip | 65330640 | `0f0ea2c347cdd897f4855309e5332919bb73aa49e177ad243e0a305800aded29` |
 | ThunderVector3D-web.zip | 36666705 | `8a41e9eb87d4d41107f097aca26bb11dfe5d471fb2fc87fda631f479576aa20a` |
 
+2026-10-04 從新帳戶的 Release 資產網址以無憑證請求實際下載完整資料流：Windows HTTP 200、65330640 bytes、328.752 秒；Web HTTP 200、36666705 bytes、149.671 秒。整檔 SHA-256 分別與上表一致，不只是 HEAD／Range／GitHub metadata 檢查。
+
 Windows EXE 135299192 bytes，SHA-256 `61a971c45fe03970acea90a63129793c802666809fe7b717da534d50a49166b7`。Windows ZIP 15 檔、Web ZIP 27 檔；皆含遊戲／素材／引擎／字型授權與來源紀錄。原始碼採 MIT，原創 ImageGen 素材依素材授權；Noto Sans TC 另依 OFL 1.1。
 
-本機兩包來自乾淨 runtime checkpoint `7bea41fcdc8d2f7ed68f7ee87f4973bbde60af39`；後續只有瀏覽器測試、文件、截圖和 Git 換行屬性變更。公開來源使用獨立安全快照，不推送本機私人祖先；公開版本與上述匯出使用相同 `game/` 與 Web 外殼內容。發佈工具會核對 GitHub 草稿與公開後的 ZIP size／SHA-256，不覆蓋既有公開版本。
+本機兩包來自乾淨 runtime checkpoint `7bea41fcdc8d2f7ed68f7ee87f4973bbde60af39`；後續變更為瀏覽器測試、文件、截圖、Git 換行屬性及開發用發佈工具，沒有修改遊戲 runtime。公開來源使用獨立安全快照，不推送本機私人祖先；公開版本與上述匯出使用相同 `game/` 與 Web 外殼內容。發佈工具會核對 GitHub 草稿與公開後的 ZIP size／SHA-256，不覆蓋既有公開版本。
 
 ## 目前公開發佈進度
 
+本次指定帳戶發佈工具的 40 項永久安全測試與獨立代理檢查通過；公開目錄合計 49 項 publication／static-verifier／font 單元測試、Godot parser exit 0。兩輪真實 `qwen3.8-flash` 工具審查沒有未解決的 evidence-backed high／blocker 程式問題；匿名封包完整下載為獨立運作驗收，不由測試或模型 verdict 代替。與 runtime checkpoint `7bea41fcdc8d2f7ed68f7ee87f4973bbde60af39` 對比，公開 `cbd19f136b7633bc5d908d00172e84669f8ba633` 的 `game/` 與 `web/` diff 為空，exit 0。
+
 2026-10-04 依使用者明確確認的 `dumbmoneycryptobump-ai` 帳戶及官方 Git Credential Manager 授權，建立 public 儲存庫並正常推送安全公開歷史；沒有推送本機私人祖先、參考圖、憑證、編譯檔或其他專案。匿名 repo API／raw README HTTP 200。
 
-GitHub Actions [run `37182321498`](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d/actions/runs/37182321498) 在公開來源 `297ce8c20d4abfa1d1f575386d91ae72e7546ddd` 實際 build／deploy 成功，正式 Pages 子路徑 HTTP 200。後續公開 checkpoint `875beba516eb6e2f31cd50c311384c32673cfa4c` 僅新增發佈工具的指定帳戶與 API 身分護欄，不改遊戲 runtime。此帳戶的 Release ZIP 發佈與匿名下載仍在驗收。
+GitHub Actions [run `37182321498`](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d/actions/runs/37182321498) 在公開來源 `297ce8c20d4abfa1d1f575386d91ae72e7546ddd` 實際 build／deploy 成功；後續 [run `37182798911`](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d/actions/runs/37182798911) 對 `cbd19f136b7633bc5d908d00172e84669f8ba633` 亦 completed／success，正式 Pages 子路徑 HTTP 200。中間公開 checkpoint `875beba516eb6e2f31cd50c311384c32673cfa4c` 僅新增發佈工具的指定帳戶與 API 身分護欄，不改遊戲 runtime。
+
+此帳戶已建立公開發行 id `402877524`、draft=false、tag `v1.1.0`，target 為 `cbd19f136b7633bc5d908d00172e84669f8ba633`。兩個 ZIP 發佈後服務端 size／state=uploaded／digest 均符合上表；匿名 repo／raw README／Release 頁／tag API／Pages HTTP 200，兩包另外完成上述匿名整檔下載與 SHA-256 驗收。沒有覆寫既有發行或 retarget 已公開 tag。
 
 正式 Pages 已在實際 Chrome 通過引擎啟動、四武器／6 秒超載、暫停／設定確認、可信任雙指移動加射擊與單指釋放／取消檢查。四尺寸 390×844、844×390、768×1024、1280×900 保持完整 16:9 戰場，八個操作鈕均至少 48px 且位於 viewport 內。瀏覽器網路切為 offline 後重載，按開始可重新啟動引擎；HTML／JS／WASM／PCK 200 回覆確認由 service worker 提供。測後恢復網路並關閉觸控模擬。這項正式子路徑驗收與上方本機 105 項斷言分別記錄，不增加實體手機／手把／其他作業系統的驗收聲稱。
 
 原 `Avery-TSE` 儲存庫、tag、發行與草稿均保留不動；沒有提交申訴、購買額度或更改系統安全設定。下節描述的是原帳戶當時的限制，不代表新帳戶部署失敗。
+
+[正式 Pages 的 Chrome 390×844 實拍](screenshots/web-deployed.jpg) 為實際 Game Over／觸控介面／離線快取完成畫面，JPEG 46366 bytes，SHA-256 `718b6b5f0792b929bcf924882c6a2f166d4b7510f3c9dd7339b0ca36a40f16b2`；不是生成圖或實體手機證據。
 
 ## 歷史：Avery-TSE 尚未通過的外部驗收
 

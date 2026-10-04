@@ -5,12 +5,12 @@
 ## 直接遊玩
 
 - [免安裝瀏覽器版](https://dumbmoneycryptobump-ai.github.io/thunder-vector-3d/index.html)：Pages 已成功建置／部署，正式網址實際遊戲啟動、四武器、觸控與離線重載已驗收。
-- [Windows 與 Web 封包／版本紀錄](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d/releases)：Windows ZIP 解壓後執行 `ThunderVector3D.exe`；此帳戶的 Release 發佈與匿名下載驗證仍在進行。
+- [Windows 與 Web 封包／版本紀錄](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d/releases/tag/v1.1.0)：v1.1.0 已公開；兩個 ZIP 的未登入完整下載、大小與 SHA-256 驗證通過。Windows ZIP 解壓後執行 `ThunderVector3D.exe`。
 - [跨裝置操作與驗收範圍](docs/CROSS_DEVICE.md)：鍵盤／滑鼠、觸控搖桿、手把與離線限制。
 
 手機／平板使用畫面外的搖桿和射擊鈕，可同時移動射擊；直向與橫向保持完整戰場。需要支援 WebGL 2／WebAssembly 的現代瀏覽器。尚未在所有實體 Android／iOS 裝置測試，不能承諾舊設備或每台手機的效能。首次完整下載前不能離線玩。
 
-2026-10-04：依使用者確認改以 `dumbmoneycryptobump-ai` 發佈。公開原始碼與 raw README 匿名存取 HTTP 200；GitHub Actions run `37182321498` 已實際成功，Pages 正式網址 HTTP 200 且 Chrome 中實際遊戲／離線重載通過。原 `Avery-TSE` 儲存庫與發行保留不動，其帳戶限制屬歷史紀錄，不代表新帳戶的狀態。Release 匿名下載尚待完成。[發行證據與待辦](docs/CROSS_DEVICE_RELEASE.md)
+2026-10-04：依使用者確認改以 `dumbmoneycryptobump-ai` 發佈。公開原始碼、raw README、Release 與 Pages 匿名存取 HTTP 200；兩次 GitHub Actions build／deploy 實際成功，Chrome 中正式網址遊戲／離線重載及兩包未登入完整下載皆通過。原 `Avery-TSE` 儲存庫與發行保留不動，其帳戶限制屬歷史紀錄，不代表新帳戶的狀態。[發行證據與實機限制](docs/CROSS_DEVICE_RELEASE.md)
 
 ![Thunder Vector 3D 擴大地圖與連鎖閃電實機展示](docs/screenshots/weapon_3.png)
 

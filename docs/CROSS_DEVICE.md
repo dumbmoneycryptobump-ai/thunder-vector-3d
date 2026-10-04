@@ -30,7 +30,7 @@ GitHub Actions `.github/workflows/web-pages.yml` 從乾淨公開來源建置，�
 
 Windows 1.1.0 原生包已實際匯出，headless 與 Windows 主視窗建立／存活／正常關閉皆通過。原 `Avery-TSE` 帳戶的 Pages／匿名公開下載曾被外部限制阻擋；現在改以使用者確認的 `dumbmoneycryptobump-ai` 發佈，新來源與 Pages 已公開，下方分列目前進度與歷史紀錄。物理手機／手把類比軸及另一台乾淨 Windows 尚未實測。
 
-真實瀏覽器畫面：[桌面](screenshots/web-desktop.png)、[手機直向](screenshots/web-phone-portrait.png)、[手機橫向](screenshots/web-phone-landscape.png)、[平板](screenshots/web-tablet.png)。
+真實瀏覽器畫面：[本機桌面](screenshots/web-desktop.png)、[本機手機直向](screenshots/web-phone-portrait.png)、[本機手機橫向](screenshots/web-phone-landscape.png)、[本機平板](screenshots/web-tablet.png)；[正式 Pages 的 Chrome 390×844 實拍](screenshots/web-deployed.jpg) 顯示 Game Over、觸控介面及完整離線快取狀態。
 
 ## 獨立審查決策
 
@@ -42,9 +42,13 @@ API 修正後另取得 Qwen 精簡最終 verdict：PASS、finish_reason=stop；�
 
 ## 目前公開發佈進度
 
+指定帳戶版本的發佈工具另通過 40 項永久離線安全測試；公開目錄連同 5 項 static-verifier 與 4 項字型測試共 49 項通過，Godot parser exit 0。CLI 寫入指令 `enable-pages`／`release` 要求明確 `--account`，並先核對 API 身分；找不到或不符的帳戶不會回退到其他憑證。舊版未指定帳戶的 Python constructor 僅保留相容性，不宣稱它一律阻擋寫入。本次寫入均使用已驗證的指定帳戶。此工具變更已完成兩輪真實 `qwen3.8-flash` 審查與獨立本機檢查，沒有未解決的 evidence-backed high／blocker 程式問題；匿名下載以另行執行的完整下載及雜湊證據驗收，不以模型 verdict 取代。
+
 2026-10-04，使用者確認發佈帳戶為 `dumbmoneycryptobump-ai`，並親自授權官方 Git Credential Manager 登入。工具先核對 API 的登入身分再執行寫入；沒有修改原 `Avery-TSE` 儲存庫、購買額度或變更安全防護。
 
-[新的 MIT 原始碼](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d) 已以獨立安全歷史正常推送，匿名 repo API／raw README 都是 HTTP 200。Actions [run `37182321498`](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d/actions/runs/37182321498) 對公開來源 `297ce8c20d4abfa1d1f575386d91ae72e7546ddd` 的建置／部署實際成功；[正式 Pages 子路徑](https://dumbmoneycryptobump-ai.github.io/thunder-vector-3d/index.html) HTTP 200。此帳戶下的 Release ZIP 發佈與匿名下載仍待驗收。
+[新的 MIT 原始碼](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d) 已以獨立安全歷史正常推送，匿名 repo API／raw README 都是 HTTP 200。Actions [run `37182321498`](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d/actions/runs/37182321498) 對公開來源 `297ce8c20d4abfa1d1f575386d91ae72e7546ddd`、後續 [run `37182798911`](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d/actions/runs/37182798911) 對 `cbd19f136b7633bc5d908d00172e84669f8ba633` 的建置／部署皆實際 completed／success；[正式 Pages 子路徑](https://dumbmoneycryptobump-ai.github.io/thunder-vector-3d/index.html) HTTP 200。
+
+[v1.1.0 Release](https://github.com/dumbmoneycryptobump-ai/thunder-vector-3d/releases/tag/v1.1.0) id `402877524` 已 published（draft=false），tag 指向安全公開來源 `cbd19f136b7633bc5d908d00172e84669f8ba633`。發佈後 API 的兩個 ZIP size／state=uploaded／digest 核對通過；另在無憑證請求下將 Windows 65330640 bytes 與 Web 36666705 bytes 全部下載完，HTTP 200、SHA-256 均與 [發行紀錄](CROSS_DEVICE_RELEASE.md) 完全相符。匿名 Release 頁與 tag API 亦 HTTP 200，不再只有登入後的 metadata 可見。
 
 正式 Pages 子路徑另已在 Chrome 實測：引擎啟動與完整離線快取、P 暫停、1–4 武器、6 秒超載、設定確認返回暫停均通過；390×844、844×390、768×1024、1280×900 四尺寸的戰場維持 16:9 且八個操作鈕皆至少 48px、沒有超出 viewport。可信任雙指事件可同時移動／射擊，放開移動指仍保留射擊，取消後清空輸入。切斷瀏覽器網路後重載並按開始，引擎再次啟動，HTML／JS／WASM／PCK 的 200 回覆均確認來自 service worker；測後已恢復網路並關閉觸控模擬。這是正式網站的 Chrome／尺寸模擬驗收，不是實體手機或所有硬體認證。
 
