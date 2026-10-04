@@ -21,8 +21,15 @@ func _run() -> void:
     _test_collection_and_hazards()
     _test_pause_death_restart()
     _test_rescue_boss_and_damage_step()
+    # Prior kill fixtures can leave random live pickups. Make that case
+    # deterministic, reset it, then drain deferred deletion BEFORE measuring
+    # the persistent scene baseline (not only after the 120 reset cycles).
+    game.call("_spawn_pickup", Vector3(0.0, 0.0, 6.2), "power")
+    _expect(not get_nodes_in_group("pickup").is_empty(), "temporary drop exists before baseline settlement")
+    _reset()
     await process_frame
     await process_frame
+    _expect(get_nodes_in_group("pickup").is_empty(), "baseline excludes actual freed temporary drops")
     var count := int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
     var world_id: int = game.world_events.get_instance_id()
     var presentation_id: int = game.mission_presentation.get_instance_id()
