@@ -1,7 +1,24 @@
-Thunder Vector 3D 1.1.0
+Thunder Vector 3D 1.2.0
 ========================
 
 An original, offline 3D vertical shooter for Windows x86_64.
+
+Tactical missions and world events (2026-10-04)
+---------------------------------------------
+- Nine cyclic timed objectives: kills, combo, supplies, overdrive, elite kills,
+  continuous no-health-loss survival, actual special-weapon shots, rescue and Boss.
+- Each completed mission grants points and overdrive charge exactly once.
+  A timeout changes the objective without ending the run or subtracting health.
+- Amber lanes warn for 2.2 seconds before a 1.6-second red pulse. Change lanes
+  to avoid it; each pulse can damage the player at most once.
+- Three rotating, hovering cyan rescue beacons offer additional points/charge
+  and a choice between safe positioning and collecting the full rescue batch.
+- Mission, overdrive and Boss notices slide/fade in with scan-line effects.
+  Mobile browser status includes actual mission progress and lane warnings.
+- Pause freezes new events and mission clocks. Boss combat suspends world events
+  and the active rescue deadline; other mission deadlines continue normally.
+- Existing four weapons, 100-shot overdrive, wingmen, maps and controls remain.
+- M still toggles camera shake; it does not disable all new beacon/notice motion.
 
 Cross-device edition (2026-10-04)
 -------------------------------
