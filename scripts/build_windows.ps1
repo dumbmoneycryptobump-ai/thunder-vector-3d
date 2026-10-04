@@ -1,6 +1,8 @@
 [CmdletBinding()]
 param(
     [string]$GodotCommand = "godot",
+    [ValidatePattern('^[A-Za-z0-9_-]*$')]
+    [string]$OutputSubdirectory = "",
     [switch]$SkipLaunchValidation
 )
 
@@ -8,7 +10,8 @@ $ErrorActionPreference = "Stop"
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $Game = Join-Path $Root "game"
 $Build = Join-Path $Root "build"
-$Version = "1.0.0"
+if ($OutputSubdirectory) { $Build = Join-Path $Build $OutputSubdirectory }
+$Version = "1.1.0"
 $ReleaseName = "ThunderVector3D-$Version-windows-x86_64"
 
 
@@ -193,7 +196,7 @@ if ($SkipLaunchValidation) {
     try {
         $windowedProcess = Start-Process -FilePath $exePath -ArgumentList @(
             "--log-file", "`"$windowedLog`""
-        ) -WorkingDirectory $Build -PassThru
+        ) -WorkingDirectory $Build -WindowStyle Hidden -PassThru
         $windowDeadline = [DateTime]::UtcNow.AddSeconds(15)
         do {
             Start-Sleep -Milliseconds 250
@@ -232,8 +235,14 @@ Copy-Item -LiteralPath (Join-Path $Root "docs\RELEASE_README.txt") -Destination 
 Copy-Item -LiteralPath (Join-Path $Root "docs\licenses\GODOT_LICENSE.txt") -Destination (Join-Path $stagePath "LICENSES\GODOT_LICENSE.txt")
 Copy-Item -LiteralPath (Join-Path $Root "docs\licenses\GODOT_COPYRIGHT.txt") -Destination (Join-Path $stagePath "LICENSES\GODOT_COPYRIGHT.txt")
 Copy-Item -LiteralPath (Join-Path $Root "docs\licenses\GODOT_THIRD_PARTY_NOTICES.txt") -Destination (Join-Path $stagePath "LICENSES\GODOT_THIRD_PARTY_NOTICES.txt")
+Copy-Item -LiteralPath (Join-Path $Root "docs\licenses\OFL_NotoSansTC.txt") -Destination (Join-Path $stagePath "LICENSES\OFL_NotoSansTC.txt")
 Copy-Item -LiteralPath (Join-Path $Root "LICENSE_ASSETS.txt") -Destination (Join-Path $stagePath "LICENSES\LICENSE_ASSETS.txt")
+Copy-Item -LiteralPath (Join-Path $Root "LICENSE") -Destination (Join-Path $stagePath "LICENSES\THUNDER_VECTOR_LICENSE.txt")
 Copy-Item -LiteralPath (Join-Path $Game "assets\generated\ART_PROVENANCE.md") -Destination (Join-Path $stagePath "ART_PROVENANCE.md")
+Copy-Item -LiteralPath (Join-Path $Game "assets\generated\CONTENT_ART_PROVENANCE.md") -Destination (Join-Path $stagePath "CONTENT_ART_PROVENANCE.md")
+Copy-Item -LiteralPath (Join-Path $Game "assets\generated\ARCADE_ART_PROVENANCE.md") -Destination (Join-Path $stagePath "ARCADE_ART_PROVENANCE.md")
+Copy-Item -LiteralPath (Join-Path $Game "assets\generated\MAP_ART_PROVENANCE.md") -Destination (Join-Path $stagePath "MAP_ART_PROVENANCE.md")
+Copy-Item -LiteralPath (Join-Path $Game "assets\fonts\FONT_PROVENANCE.md") -Destination (Join-Path $stagePath "FONT_PROVENANCE.md")
 
 $gitCommit = (& git -C $Root rev-parse HEAD 2>$null).Trim()
 if (-not $gitCommit) { $gitCommit = "unavailable" }
@@ -256,11 +265,17 @@ Compress-Archive -Path (Join-Path $stagePath "*") -DestinationPath $zipPath -Com
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $expectedEntries = @(
     "ART_PROVENANCE.md",
+    "ARCADE_ART_PROVENANCE.md",
+    "MAP_ART_PROVENANCE.md",
+    "FONT_PROVENANCE.md",
     "BUILD_INFO.txt",
+    "CONTENT_ART_PROVENANCE.md",
     "LICENSES/GODOT_COPYRIGHT.txt",
     "LICENSES/GODOT_LICENSE.txt",
     "LICENSES/GODOT_THIRD_PARTY_NOTICES.txt",
+    "LICENSES/OFL_NotoSansTC.txt",
     "LICENSES/LICENSE_ASSETS.txt",
+    "LICENSES/THUNDER_VECTOR_LICENSE.txt",
     "README.txt",
     "SHA256SUMS.txt",
     "ThunderVector3D.exe"

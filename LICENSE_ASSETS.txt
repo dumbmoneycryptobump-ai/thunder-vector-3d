@@ -1,14 +1,27 @@
 Thunder Vector 3D starter assets
 
 The original project assets under `game/assets/`, the two asset contact sheets
-under `reference_images/`, the gameplay screenshot under `docs/screenshots/`,
+under `reference_images/`, the gameplay screenshots under `docs/screenshots/`,
 the knowledge-graph diagrams, and the Godot primitive-mesh compositions were
 created for this project. You may use, modify, and redistribute them as part of
 your own project, including commercially.
 
-The seven files under `game/assets/generated/*_imagegen_v1.png` are original OpenAI ImageGen outputs created for this project on 2026-08-29. Their prompts, hashes, and alpha-verification method are recorded in `game/assets/generated/ART_PROVENANCE.md`.
+The thirteen files under `game/assets/generated/*_imagegen_v1.png` are original
+OpenAI ImageGen outputs created for this project: seven on 2026-08-29 and four
+content-expansion assets on 2026-09-13, plus one wingman and one orbital planet
+on 2026-10-04 (client date).
+Their prompts, hashes, and image/alpha
+verification methods are recorded in `game/assets/generated/ART_PROVENANCE.md`
+and `game/assets/generated/CONTENT_ART_PROVENANCE.md`, plus
+`game/assets/generated/ARCADE_ART_PROVENANCE.md` and
+`game/assets/generated/MAP_ART_PROVENANCE.md`. The sector panorama is
+intentionally opaque; the other twelve generated PNGs use transparency.
 
-This asset grant does not cover third-party software notices under
+This asset grant does not cover third-party font files under
+`game/assets/fonts/`: Noto Sans TC is third-party font software under SIL Open
+Font License 1.1. Its unmodified notice is `docs/licenses/OFL_NotoSansTC.txt`;
+source and exact hashes are in `game/assets/fonts/FONT_PROVENANCE.md`.
+The grant also does not cover third-party software notices under
 `docs/licenses/`, which remain under their stated licenses. Historical planning
 boards under `docs/早期參考稿/` and the outdated concept images
 `reference_images/gameplay_visual_target.jpg` and

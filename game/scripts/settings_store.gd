@@ -8,7 +8,7 @@ const DEFAULTS := {
     "master_volume": 1.0,
     "sfx_volume": 1.0,
     "display_mode": "windowed",
-    "resolution": "1280x720",
+    "resolution": "1600x900",
     "difficulty": "normal",
 }
 const DIFFICULTY_PROFILES := {

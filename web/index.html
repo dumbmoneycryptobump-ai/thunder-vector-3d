@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071324">
+  <title>$GODOT_PROJECT_NAME</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, -apple-system, "Microsoft JhengHei", sans-serif; background:#071324; color:#ecfaff; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100svh; background:radial-gradient(ellipse at top,#143a4b,#071324 65%); }
+    button { color:inherit; font:inherit; min-width:48px; min-height:48px; border:1px solid #47778a; border-radius:12px; background:#122c3e; cursor:pointer; touch-action:none; }
+    button:hover,button:focus-visible { background:#214d61; outline:2px solid #a9f1ff; outline-offset:2px; }
+    button.active,button:active { background:#267481; }
+    button:disabled { opacity:.5; cursor:wait; }
+    #shell { max-width:1440px; margin:auto; padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left)); }
+    #shell:fullscreen { background:#071324; max-width:none; overflow:auto; }
+    header { display:flex; gap:8px; align-items:center; justify-content:space-between; padding:0 0 8px; }
+    .brand { font-size:clamp(13px,2.5vw,20px); letter-spacing:.12em; font-weight:800; }
+    .toolbar { display:flex; gap:6px; }
+    .toolbar button { padding:0 12px; font-size:13px; }
+    #stage { position:relative; width:100%; aspect-ratio:16/9; margin:auto; background:#030912; border:1px solid #325266; box-shadow:0 12px 40px #0006; overflow:hidden; }
+    #canvas { width:100%; height:100%; display:block; border:0; outline:0; touch-action:none; }
+    #boot { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; padding:18px; background:linear-gradient(145deg,#0c2b42f5,#091021fa); }
+    #boot h1 { margin:0 0 8px; font-size:clamp(20px,4vw,42px); letter-spacing:.08em; }
+    #boot p { color:#c1dae4; margin:8px auto; max-width:36em; font-size:clamp(12px,2vw,16px); }
+    #start { min-width:160px; padding:8px 22px; background:#167a83; font-weight:800; }
+    #progress { display:block; width:80%; margin:12px auto; accent-color:#5ee2df; }
+    #message { min-height:24px; padding:6px 2px; font-size:12px; color:#bfd5dd; text-align:center; overflow-wrap:anywhere; }
+    #offline-info { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px; padding:0 0 5px; color:#a9c5d3; font-size:12px; }
+    #offline-retry { padding:4px 12px; }
+    #mobile-status { display:none; flex-wrap:wrap; justify-content:center; gap:6px 16px; padding:8px; min-height:38px; background:#091f30; font-size:15px; font-weight:650; border-radius:8px; }
+    #controls { display:none; border:0; min-width:0; padding:8px 0 0; margin:0; gap:10px; grid-template-columns:128px 1fr; align-items:center; }
+    .touch-on #controls { display:grid; }
+    .touch-on #mobile-status { display:flex; }
+    #stick { width:120px; height:120px; touch-action:none; border:2px solid #4b7b91; border-radius:50%; background:radial-gradient(circle,#214b5e,#102434); position:relative; user-select:none; }
+    #stick::before,#stick::after { content:""; position:absolute; background:#5c9db14d; }
+    #stick::before { left:50%; top:12%; bottom:12%; width:1px; }
+    #stick::after { top:50%; left:12%; right:12%; height:1px; }
+    #knob { width:48px; height:48px; border-radius:50%; position:absolute; left:34px; top:34px; background:#9ad4da; border:3px solid #dbffff; box-shadow:0 3px 10px #0008; pointer-events:none; }
+    .actions { display:grid; grid-template-columns:repeat(4,minmax(48px,1fr)); gap:6px; }
+    .actions button { padding:4px; font-size:13px; line-height:1.2; font-weight:650; }
+    .actions button small { display:block; font-size:10px; font-weight:400; margin-top:2px; }
+    [data-action="fire"] { background:#145a74; }
+    [data-action="overdrive"] { background:#634718; border-color:#ab9354; }
+    #settings-nav { grid-column:1/-1; display:grid; grid-template-columns:repeat(5,minmax(48px,1fr)); gap:6px; }
+    #settings-nav[hidden] { display:none; }
+    #rotate { display:none; margin:5px 0 0; font-size:12px; color:#acc4d3; text-align:center; }
+    #desktop-help { text-align:center; font-size:12px; color:#9fbac9; margin:6px 0; }
+    .touch-on #desktop-help { display:none; }
+    @media (orientation:portrait) { .touch-on #rotate { display:block; } }
+    @media (max-width:390px) { #controls { grid-template-columns:102px 1fr; gap:6px; } #stick { width:100px; height:100px; } #knob { left:24px; top:24px; } .actions { gap:4px; } }
+    @media (orientation:landscape) and (max-height:540px) { header { padding-bottom:4px; } .toolbar button { min-height:48px; } #controls { padding-top:4px; grid-template-columns:100px 1fr; } #stick { width:96px; height:96px; } #knob { left:22px; top:22px; } #message { padding:2px; min-height:18px; } #mobile-status { padding:4px; min-height:28px; font-size:13px; } }
+  </style>
+  $GODOT_HEAD_INCLUDE
+</head>
+<body>
+  <main id="shell">
+    <header><span class="brand">THUNDER VECTOR 3D</span><div class="toolbar"><button id="touch-toggle" type="button" aria-pressed="false">觸控面板</button><button id="fullscreen" type="button">全螢幕</button></div></header>
+    <section id="stage" aria-label="16 比 9 遊戲畫面">
+      <canvas id="canvas" width="1280" height="720" tabindex="0" aria-label="Thunder Vector 3D 遊戲畫布">瀏覽器不支援 Canvas。</canvas>
+      <div id="boot"><div><h1>THUNDER VECTOR 3D</h1><p>閃避彈幕・四種武器・百發超載</p><button id="start" type="button">開始遊戲</button><progress id="progress" hidden></progress><p id="boot-status">點擊開始以載入遊戲並允許音訊。首次載入需要下載遊戲資料。</p></div></div>
+    </section>
+    <div id="message" role="status" aria-live="polite">桌機與手機皆可遊玩；需要 WebGL 2 與 WebAssembly。</div>
+    <div id="offline-info"><span id="offline-status" role="status">離線快取：開始遊戲後準備</span><button id="offline-retry" type="button" hidden>重試離線快取</button></div>
+    <div id="mobile-status" aria-label="遊戲狀態"><span id="status-hp">生命 —</span><span id="status-score">分數 0</span><span id="status-weapon">武器 1</span><span id="status-charge">超載 —</span><span id="status-mode">待命</span></div>
+    <fieldset id="controls" disabled aria-label="觸控操作">
+      <div id="stick" role="application" aria-label="八方向移動搖桿"><span id="knob"></span></div>
+      <div class="actions">
+        <button type="button" data-action="fire">射擊<small>按住 FIRE</small></button>
+        <button type="button" data-action="bomb">炸彈<small>B</small></button>
+        <button type="button" data-action="overdrive">百發超載<small>E</small></button>
+        <button type="button" data-action="weapon_cycle">切換武器<small>1 → 4</small></button>
+        <button type="button" data-action="pause">暫停／繼續<small>P</small></button>
+        <button type="button" data-action="restart">重新開始<small>R</small></button>
+        <button type="button" data-action="settings">設定<small>O</small></button>
+        <button type="button" data-action="confirm">確認<small>ENTER</small></button>
+      </div>
+      <div id="settings-nav" hidden aria-label="設定選單操作">
+        <button type="button" data-action="up" aria-label="上一項">↑</button><button type="button" data-action="down" aria-label="下一項">↓</button><button type="button" data-action="left" aria-label="減少">←</button><button type="button" data-action="right" aria-label="增加">→</button><button type="button" data-action="confirm">儲存</button>
+      </div>
+    </fieldset>
+    <p id="rotate">橫向通常更好操作；直向也能繼續遊玩。</p>
+    <p id="desktop-help">WASD／方向鍵移動 · 空白鍵／左鍵射擊 · 1–4 武器 · B 炸彈 · E 超載 · P 暫停 · O 設定</p>
+    <noscript>請啟用 JavaScript 才能遊玩。</noscript>
+  </main>
+  <script src="$GODOT_URL"></script>
+  <script>
+  'use strict';
+  // Godot's stock offline worker caches index.html, not a directory navigation.
+  // Keep the project subpath and existing query/hash without loading another page.
+  if (location.pathname.endsWith('/')) {
+    const canonical = new URL('index.html', location.href);
+    canonical.search = location.search;
+    canonical.hash = location.hash;
+    history.replaceState(history.state, '', canonical.href);
+  }
+  const GODOT_CONFIG = $GODOT_CONFIG;
+  const engine = new Engine(GODOT_CONFIG);
+  const canvas = document.getElementById('canvas');
+  const controls = document.getElementById('controls');
+  const message = document.getElementById('message');
+  const startButton = document.getElementById('start');
+  const bootStatus = document.getElementById('boot-status');
+  const progress = document.getElementById('progress');
+  const stick = document.getElementById('stick');
+  const knob = document.getElementById('knob');
+  const pointers = new Map();
+  const actionOwners = new Map();
+  let stickOwner = null;
+  let ready = false;
+  let started = false;
+  let state = {paused:false, dead:false, settings:false};
+  window.thunderDeviceControls = true;
+  window.thunderDeviceTouch = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+  window.thunderWebReady = false;
+  window.thunderWebError = '';
+  window.thunderOfflineReady = false;
+  let offlinePreparing = false;
+  let offlineUpdateWorker = null;
+
+  function setTouchPanel(enabled) {
+    releaseAll();
+    window.thunderDeviceTouch = enabled;
+    document.body.classList.toggle('touch-on', enabled);
+    document.getElementById('touch-toggle').setAttribute('aria-pressed', String(enabled));
+    resizeStage();
+  }
+  function resizeStage() {
+    const shell = document.getElementById('shell');
+    const padding = getComputedStyle(shell);
+    let width = shell.clientWidth - parseFloat(padding.paddingLeft) - parseFloat(padding.paddingRight);
+    if (innerWidth > innerHeight || !window.thunderDeviceTouch) {
+      const reserved = document.querySelector('header').offsetHeight + message.offsetHeight + document.getElementById('offline-info').offsetHeight + controls.offsetHeight + document.getElementById('mobile-status').offsetHeight + 36;
+      width = Math.min(width, Math.max(150, innerHeight - reserved) * 16 / 9);
+    }
+    document.getElementById('stage').style.width = Math.floor(Math.max(160, width)) + 'px';
+    // Keep the engine's logical render/input size fixed. CSS scales the 16:9 view.
+  }
+  function action(name, pressed) {
+    if (ready && typeof window.thunderDeviceAction === 'function') window.thunderDeviceAction(name, pressed);
+  }
+  function move(x, y) {
+    if (ready && typeof window.thunderDeviceMove === 'function') window.thunderDeviceMove(x, y);
+  }
+  function claimAction(owner, element) {
+    if (!ready || pointers.has(owner)) return;
+    const name = element.dataset.action;
+    pointers.set(owner, {element, name});
+    if (!actionOwners.has(name)) actionOwners.set(name, new Set());
+    const owners = actionOwners.get(name);
+    if (owners.size === 0) action(name, true);
+    owners.add(owner);
+    element.classList.add('active');
+  }
+  function release(owner) {
+    if (owner === stickOwner) { stickOwner = null; knob.style.transform = ''; move(0, 0); }
+    const record = pointers.get(owner);
+    if (!record) return;
+    pointers.delete(owner);
+    const owners = actionOwners.get(record.name);
+    if (owners) {
+      owners.delete(owner);
+      if (owners.size === 0) { action(record.name, false); actionOwners.delete(record.name); }
+    }
+    if (![...pointers.values()].some(value => value.element === record.element)) record.element.classList.remove('active');
+  }
+  function releaseAll() {
+    for (const name of actionOwners.keys()) action(name, false);
+    pointers.clear(); actionOwners.clear(); stickOwner = null;
+    knob.style.transform = ''; move(0, 0);
+    document.querySelectorAll('.active').forEach(element => element.classList.remove('active'));
+  }
+  document.querySelectorAll('[data-action]').forEach(button => {
+    button.addEventListener('pointerdown', event => {
+      if (!ready) return;
+      event.preventDefault();
+      button.setPointerCapture(event.pointerId);
+      claimAction(event.pointerId, button);
+      canvas.focus({preventScroll:true});
+    });
+    for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(name, event => release(event.pointerId));
+    button.addEventListener('keydown', event => {
+      if (event.code !== 'Space' && event.code !== 'Enter') return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (!event.repeat) claimAction('key:' + event.code + ':' + button.dataset.action, button);
+    });
+    button.addEventListener('keyup', event => {
+      if (event.code === 'Space' || event.code === 'Enter') { event.preventDefault(); event.stopPropagation(); release('key:' + event.code + ':' + button.dataset.action); }
+    });
+    button.addEventListener('blur', () => {
+      for (const [owner, record] of pointers) {
+        if (typeof owner === 'string' && owner.startsWith('key:') && record.element === button) release(owner);
+      }
+    });
+  });
+  function updateStick(event) {
+    if (event.pointerId !== stickOwner) return;
+    const rect = stick.getBoundingClientRect();
+    const dx = event.clientX - rect.left - rect.width / 2;
+    const dy = event.clientY - rect.top - rect.height / 2;
+    const distance = Math.hypot(dx, dy);
+    const radius = rect.width * 0.32;
+    const scale = Math.min(1, radius / Math.max(distance, 1));
+    knob.style.transform = `translate(${dx * scale}px, ${dy * scale}px)`;
+    if (distance < radius * 0.2) { move(0, 0); return; }
+    const angle = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4);
+    move(Math.cos(angle), Math.sin(angle));
+  }
+  stick.addEventListener('pointerdown', event => {
+    if (!ready || stickOwner !== null || state.paused || state.dead || state.settings) return;
+    event.preventDefault(); stickOwner = event.pointerId; stick.setPointerCapture(event.pointerId);
+    canvas.focus({preventScroll:true}); updateStick(event);
+  });
+  stick.addEventListener('pointermove', updateStick);
+  for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) stick.addEventListener(name, event => release(event.pointerId));
+  function loseFocus() {
+    releaseAll();
+    action('focus_lost', true);
+    // Regaining focus never resumes automatically; use Pause/Continue explicitly.
+  }
+  window.addEventListener('blur', loseFocus);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) loseFocus(); });
+  window.addEventListener('pagehide', loseFocus);
+  window.addEventListener('resize', resizeStage);
+  document.addEventListener('fullscreenchange', resizeStage);
+  document.getElementById('touch-toggle').addEventListener('click', () => setTouchPanel(!window.thunderDeviceTouch));
+  document.getElementById('fullscreen').addEventListener('click', async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else if (document.getElementById('shell').requestFullscreen) await document.getElementById('shell').requestFullscreen();
+      else message.textContent = '此瀏覽器不支援網頁全螢幕；仍可正常遊玩。';
+    } catch (_) { message.textContent = '全螢幕未獲允許；可繼續在目前畫面遊玩。'; }
+  });
+  function updateStatus() {
+    if (!ready) return;
+    try {
+      const next = JSON.parse(window.thunderStateJson || '{}');
+      if (!('hp' in next)) return;
+      if ((next.paused || next.dead || next.settings) && !(state.paused || state.dead || state.settings)) releaseAll();
+      state = next;
+      document.getElementById('status-hp').textContent = '生命 ' + next.hp;
+      document.getElementById('status-score').textContent = '分數 ' + next.score;
+      document.getElementById('status-weapon').textContent = ['','機砲','導彈','閃電','雷射'][next.weapon_mode] || '武器';
+      document.getElementById('status-charge').textContent = next.overdrive_seconds > 0 ? '超載 ' + Math.ceil(next.overdrive_seconds) + ' 秒' : '充能 ' + Math.floor(next.overdrive_charge) + '%';
+      document.getElementById('status-mode').textContent = next.dead ? '任務結束・按重開' : next.settings ? '設定中' : next.paused ? '已暫停・按繼續' : '戰區 ' + (Number(next.sector) + 1);
+      const navigation = document.getElementById('settings-nav');
+      if (navigation.hidden === Boolean(next.settings)) { navigation.hidden = !next.settings; resizeStage(); }
+    } catch (_) { /* A not-yet-published bridge snapshot is harmless. */ }
+  }
+  function offlineStatus(text, retry = false, label = '重試離線快取') {
+    document.getElementById('offline-status').textContent = text;
+    document.getElementById('offline-retry').hidden = !retry;
+    document.getElementById('offline-retry').textContent = label;
+    resizeStage();
+  }
+  function bounded(promise, milliseconds) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('offline timeout')), milliseconds);
+      promise.then(value => { clearTimeout(timer); resolve(value); }, error => { clearTimeout(timer); reject(error); });
+    });
+  }
+  async function prepareOffline() {
+    if (!ready || offlinePreparing || window.thunderOfflineReady) return;
+    if (!GODOT_CONFIG.serviceWorker || !window.isSecureContext || !('serviceWorker' in navigator) || !('caches' in window)) {
+      offlineStatus('離線快取不可用；請使用 HTTPS 或 localhost，線上遊玩不受影響。');
+      return;
+    }
+    offlinePreparing = true;
+    offlineStatus('離線快取準備中；首次可能需要再次下載遊戲資料…');
+    try {
+      const workerUrl = new URL(GODOT_CONFIG.serviceWorker, location.href);
+      const executable = GODOT_CONFIG.executable;
+      // Exact core files emitted by the pinned Godot 4.7.2 no-threads template.
+      const names = ['.html','.js','.offline.html','.icon.png','.apple-touch-icon.png','.audio.worklet.js','.audio.position.worklet.js','.wasm'].map(suffix => executable + suffix);
+      names.push(GODOT_CONFIG.mainPack || executable + '.pck');
+      const urls = names.map(name => new URL(name, location.href));
+      if (workerUrl.origin !== location.origin || urls.some(url => url.origin !== location.origin || url.search || url.hash)) throw new Error('nonlocal offline resources');
+      const registration = await bounded(navigator.serviceWorker.ready, 15000);
+      if (registration.waiting?.scriptURL === workerUrl.href) {
+        offlineUpdateWorker = registration.waiting;
+        offlineStatus('新版本已下載；更新並重載會結束目前這一局。', true, '更新並重載');
+        return;
+      }
+      if (!registration.active || registration.active.scriptURL !== workerUrl.href) throw new Error('worker not active');
+      // "claim" is the generated worker's public message; no custom worker/cache rewrite.
+      registration.active.postMessage('claim');
+      for (let attempt = 0; attempt < 40 && navigator.serviceWorker.controller?.scriptURL !== workerUrl.href; attempt++) await new Promise(resolve => setTimeout(resolve, 100));
+      if (navigator.serviceWorker.controller?.scriptURL !== workerUrl.href) throw new Error('worker not controlling this page');
+      async function completeCache() {
+        let matches = 0;
+        for (const name of await caches.keys()) {
+          const cache = await caches.open(name);
+          if (!(await cache.match(urls[0].href))) continue;
+          const present = await Promise.all(urls.map(url => cache.match(url.href)));
+          if (present.every(response => response && response.ok)) matches++;
+        }
+        return matches === 1;
+      }
+      if (!(await completeCache())) {
+        // Engine fetched WASM/PCK before the worker existed on a first-ever visit.
+        // Re-fetch only those two exact URLs under its control so Godot fills its
+        // own versioned cache. Consume streams without retaining a second full copy.
+        for (const url of urls.slice(-2)) {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 60000);
+          try {
+            const response = await fetch(url.href, {credentials:'same-origin', redirect:'error', signal:controller.signal});
+            if (!response.ok || !response.body) throw new Error('offline resource unavailable');
+            const reader = response.body.getReader();
+            let bytes = 0;
+            while (true) {
+              const part = await reader.read();
+              if (part.done) break;
+              bytes += part.value.byteLength;
+              if (bytes > 128 * 1024 * 1024) { await reader.cancel(); throw new Error('offline resource exceeds bound'); }
+            }
+          } finally { clearTimeout(timer); }
+        }
+      }
+      for (let attempt = 0; attempt < 20; attempt++) {
+        if (await completeCache()) {
+          window.thunderOfflineReady = true;
+          document.documentElement.dataset.offlineWorker = 'complete';
+          offlineStatus('離線快取已完成；可離線重新開啟（瀏覽器清除資料後需重新下載）。');
+          return;
+        }
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
+      throw new Error('offline cache incomplete');
+    } catch (_) {
+      offlineStatus('離線快取尚未完成；保持連線並重試，版本更新時請重新整理。', true);
+    } finally { offlinePreparing = false; }
+  }
+  document.getElementById('offline-retry').addEventListener('click', () => {
+    if (offlineUpdateWorker) {
+      loseFocus();
+      offlineStatus('正在啟用更新並重新載入…');
+      // The official waiting worker claims clients and navigates them on "update".
+      offlineUpdateWorker.postMessage('update');
+      offlineUpdateWorker = null;
+    } else prepareOffline();
+  });
+  startButton.addEventListener('click', () => {
+    if (started) return;
+    const missing = Engine.getMissingFeatures({threads:false});
+    if (missing.length) { bootStatus.textContent = '此瀏覽器缺少：' + missing.join('、'); return; }
+    started = true; startButton.disabled = true; progress.hidden = false;
+    bootStatus.textContent = '載入遊戲中…';
+    // This call intentionally begins in a real click/tap handler for audio policy.
+    engine.startGame({canvas, canvasResizePolicy:0, onProgress(current,total) {
+      if (total > 0) { progress.max = total; progress.value = current; }
+      else progress.removeAttribute('value');
+    }, onExit(code) {
+      releaseAll(); ready = false; window.thunderWebReady = false; controls.disabled = true;
+      message.textContent = '遊戲已結束（' + code + '）；重新整理可再次載入。';
+    }}).then(() => {
+      ready = true; window.thunderWebReady = true; controls.disabled = false;
+      document.getElementById('boot').remove(); canvas.focus({preventScroll:true});
+      message.textContent = '已就緒。若無聲音，請點一下遊戲畫面。離開分頁會暫停，返回後按繼續。';
+      updateStatus(); setInterval(updateStatus, 250); resizeStage();
+      prepareOffline();
+    }).catch(error => {
+      window.thunderWebError = String(error); console.error(error);
+      bootStatus.textContent = '載入失敗：' + String(error) + '。請使用 HTTP/HTTPS 網址並重新整理。';
+      progress.hidden = true;
+    });
+  });
+  setTouchPanel(window.thunderDeviceTouch);
+  </script>
+</body>
+</html>

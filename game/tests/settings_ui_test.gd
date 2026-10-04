@@ -49,7 +49,7 @@ func _run_tests() -> void:
     _expect(is_equal_approx(float(persisted["master_volume"]), 0.9), "UI should change master volume")
     _expect(is_equal_approx(float(persisted["sfx_volume"]), 0.9), "UI should change SFX volume")
     _expect(persisted["display_mode"] == "fullscreen", "UI should change display mode")
-    _expect(persisted["resolution"] == "1600x900", "UI should change resolution")
+    _expect(persisted["resolution"] == "1920x1080", "UI should advance from the expanded default resolution")
     _expect(persisted["difficulty"] == "hard", "UI should change difficulty")
     _expect(is_equal_approx(float(_main_scene.difficulty_profile["enemy_bullet_speed_scale"]), 1.15), "UI difficulty should apply immediately")
 

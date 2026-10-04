@@ -8,10 +8,12 @@ const ASSETS := [
     "pickup_power_imagegen_v1.png",
     "pickup_health_imagegen_v1.png",
     "pickup_bomb_imagegen_v1.png",
+    "wingman_imagegen_v1.png",
 ]
 const EXPECTED_ROLES := {
     "player": 1,
-    "scout": 32,
+    "wingman": 4,
+    "scout": 64,
     "heavy": 16,
     "boss": 1,
     "pickup_power": 1,
@@ -52,7 +54,7 @@ func _run_tests() -> void:
         await process_frame
 
     if failures.is_empty():
-        print("ART_INTEGRATION_TEST_PASS assets=7 alpha=genuine roles=%s renderer=gl_compatibility" % EXPECTED_ROLES)
+        print("ART_INTEGRATION_TEST_PASS assets=%d alpha=genuine roles=%s renderer=gl_compatibility" % [ASSETS.size(), EXPECTED_ROLES])
         quit(0)
     else:
         for failure in failures:

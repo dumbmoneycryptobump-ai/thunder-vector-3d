@@ -31,6 +31,8 @@ func _run_tests() -> void:
     _expect(persisted["resolution"] == "1600x900", "resolution should persist")
     _expect(persisted["difficulty"] == "hard", "difficulty should persist")
     _expect(reloaded.get_resolution_size() == Vector2i(1600, 900), "resolution should map to a window size")
+    _expect(store.save_settings({"resolution": "1280x720"}) == OK, "existing small-window preference fixture should save")
+    _expect(SettingsStoreScript.new(test_path).load_settings()["resolution"] == "1280x720", "new defaults must preserve an existing 1280x720 preference")
 
     save_error = store.save_settings({
         "master_volume": 4.0,
@@ -44,7 +46,7 @@ func _run_tests() -> void:
     _expect(is_equal_approx(float(sanitized["master_volume"]), 1.0), "master volume should clamp to one")
     _expect(is_equal_approx(float(sanitized["sfx_volume"]), 0.0), "SFX volume should clamp to zero")
     _expect(sanitized["display_mode"] == "windowed", "invalid display mode should use default")
-    _expect(sanitized["resolution"] == "1280x720", "invalid resolution should use default")
+    _expect(sanitized["resolution"] == "1600x900", "invalid resolution should use the expanded default")
     _expect(sanitized["difficulty"] == "normal", "invalid difficulty should use default")
 
     var invalid_config := ConfigFile.new()

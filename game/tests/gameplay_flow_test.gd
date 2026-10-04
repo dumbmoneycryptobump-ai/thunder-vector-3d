@@ -1,9 +1,9 @@
 extends SceneTree
 
 const EXPECTED_CAPACITIES := {
-    "player_bullet": 96,
+    "player_bullet": 1024,
     "enemy_bullet": 128,
-    "scout": 32,
+    "scout": 64,
     "heavy": 16,
 }
 

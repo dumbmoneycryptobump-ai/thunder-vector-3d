@@ -1,0 +1,3 @@
+# Keep the official OFL notice byte-identical on Windows checkouts.
+docs/licenses/OFL_NotoSansTC.txt text eol=lf
+game/assets/fonts/*.ttf -text

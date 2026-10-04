@@ -7,6 +7,14 @@ const BOSS_TEXTURE: Texture2D = preload("res://assets/generated/boss_core_imageg
 const POWER_TEXTURE: Texture2D = preload("res://assets/generated/pickup_power_imagegen_v1.png")
 const HEALTH_TEXTURE: Texture2D = preload("res://assets/generated/pickup_health_imagegen_v1.png")
 const BOMB_TEXTURE: Texture2D = preload("res://assets/generated/pickup_bomb_imagegen_v1.png")
+const INTERCEPTOR_TEXTURE: Texture2D = preload("res://assets/generated/enemy_interceptor_imagegen_v1.png")
+const BOMBER_TEXTURE: Texture2D = preload("res://assets/generated/enemy_bomber_imagegen_v1.png")
+const SHIELD_TEXTURE: Texture2D = preload("res://assets/generated/pickup_shield_imagegen_v1.png")
+const WINGMAN_TEXTURE: Texture2D = preload("res://assets/generated/wingman_imagegen_v1.png")
+
+
+func attach_wingman(parent: Node3D) -> Sprite3D:
+    return _attach(parent, WINGMAN_TEXTURE, 1.55, 0.42, "wingman", 0.0)
 
 
 func attach_player(parent: Node3D) -> Sprite3D:
@@ -25,8 +33,25 @@ func attach_boss(parent: Node3D) -> Sprite3D:
     return _attach(parent, BOSS_TEXTURE, 6.4, 0.92, "boss", 180.0)
 
 
+func set_enemy_archetype(parent: Node3D, pool_kind: String, archetype: String) -> void:
+    var sprite := parent.get_node("ArtSprite") as Sprite3D
+    var texture: Texture2D = HEAVY_TEXTURE if pool_kind == "heavy" else SCOUT_TEXTURE
+    var width := 4.0 if pool_kind == "heavy" else 2.6
+    if archetype == "interceptor":
+        texture = INTERCEPTOR_TEXTURE
+    elif archetype == "bomber":
+        texture = BOMBER_TEXTURE
+    sprite.texture = texture
+    sprite.pixel_size = width / float(texture.get_width())
+    sprite.set_meta("source", texture.resource_path)
+    sprite.rotation_degrees.z = 0.0
+    sprite.modulate = Color.WHITE
+
+
 func attach_pickup(parent: Node3D, kind: String) -> Sprite3D:
     match kind:
+        "shield":
+            return _attach(parent, SHIELD_TEXTURE, 1.5, 0.48, "pickup_shield", 0.0)
         "health":
             return _attach(parent, HEALTH_TEXTURE, 1.35, 0.48, "pickup_health", 0.0)
         "bomb":

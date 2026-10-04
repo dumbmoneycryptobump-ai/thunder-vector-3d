@@ -1,8 +1,16 @@
-# Thunder Vector 3D — 完整離線 Windows 3D 縱向射擊遊戲
+# Thunder Vector 3D — 開源跨裝置 3D 縱向射擊遊戲
 
-> Godot 4.7.2／GDScript 製作；遊戲執行完全離線。先開啟 `START_CODEX_HERE.md` 可繼續開發，或直接執行 `scripts/start_game.ps1`。
+> MIT 開源，Godot 4.7.2／GDScript。Windows 可離線執行；瀏覽器版面向電腦、手機和平板，首次下載後支援 PWA 離線快取。
 
-![Thunder Vector 3D 遊戲畫面](docs/screenshots/gameplay_preview.png)
+## 直接遊玩
+
+- [瀏覽器遊玩](https://avery-tse.github.io/thunder-vector-3d/index.html)：按「開始遊戲」，不用安裝 Godot。
+- [Windows 下載與版本紀錄](https://github.com/Avery-TSE/thunder-vector-3d/releases)：下載 Windows ZIP、解壓後執行 `ThunderVector3D.exe`。
+- [跨裝置操作與驗收範圍](docs/CROSS_DEVICE.md)：鍵盤／滑鼠、觸控搖桿、手把與離線限制。
+
+手機／平板使用畫面外的搖桿和射擊鈕，可同時移動射擊；直向與橫向保持完整戰場。需要支援 WebGL 2／WebAssembly 的現代瀏覽器。尚未在所有實體 Android／iOS 裝置測試，不能承諾舊設備或每台手機的效能。首次完整下載前不能離線玩。
+
+![Thunder Vector 3D 擴大地圖與連鎖閃電實機展示](docs/screenshots/weapon_3.png)
 
 ## 下載原始碼
 
@@ -14,24 +22,47 @@ cd thunder-vector-3d
 .\scripts\start_game.ps1
 ```
 
-需要先安裝 Godot 4.7.2 Standard。GitHub 頁面的 **Code → Download ZIP**
+從原始碼啟動需要先安裝 Godot 4.7.2 Standard；一般玩家使用上方網頁或 Windows 下載即可。GitHub 頁面的 **Code → Download ZIP**
 也能直接下載完整原始碼；`build/` 編譯產物不放進 Git 歷史。
 
 這不是「智譜 API」。本套件使用的是**智慧圖譜／知識圖譜地圖**：`knowledge_graph/knowledge_graph.json` 是專案狀態來源，`smart_graph.png` 與 `smart_graph.svg` 是視覺連結圖。Codex 負責主程式修改，Ollama 地端模型透過 MCP 擔任規劃與審查者。
 
 ## 已完成內容
 
-- Godot 4.7.2、GDScript、GL Compatibility、Windows x86_64 的完整可玩來源碼。
-- 原創透明 ImageGen 玩家、Scout、Heavy、BOSS 與三種道具主視覺；程序化 3D hull 保留為後備。
-- WASD／方向鍵移動、Space／左鍵射擊、B 炸彈、P／Esc 暫停、R／Enter 重開。
+- 四種可切換主武器：散射機砲、四枚追蹤爆炸導彈、最多五目標連鎖閃電、雙束貫穿雷射；各模式保留僚機射擊。
+- 擴大飛行與射擊畫面，可移動面積比前版增加約 89%；三戰區分別呈現軌道船塢、殘骸煉製區與晶體城塞，搭配原創透明行星與航線／BOSS 進度介面。
+- 地圖裝飾使用固定共用資源，新武器使用預先建立的固定物件池；中央甲板保持低干擾，高建築位於飛行區外側。
+- 百發超載：按 E 啟動 6 秒自動百發齊射，開場滿能量；期間暫時取代選中的主武器，結束後恢復所選模式。機砲模式五段成長至每輪 40 發。
+- 原創透明僚機素材，開場 2 架、武器階級 3 解鎖 4 架；密集一擊雜兵、連殺與局部命中特效，M 可關閉震動；[玩法與驗收](docs/ARCADE_OVERDRIVE.md)。
+- Godot 4.7.2、GDScript、GL Compatibility；Windows x86_64 原生版及單執行緒 WebGL 2 網頁版共用玩法。
+- 手機觸控的移動／射擊分離指標，畫面外 48px+ 按鈕與可讀狀態列；切到其他 App 自動暫停，返回需按繼續。
+- 手把左搖桿／十字鍵移動、A／右扳機射擊、B 炸彈、X 切武器、Y 超載、Start 暫停、Back 設定。
+- 原創透明 ImageGen 玩家、四種敵機、BOSS 與四種道具主視覺；程序化 3D hull 保留為後備。
+- 新增蛇行攔截機、三向彈幕轟炸機、四種編隊、三個戰區配色與星雲全景；[內容擴充與驗收紀錄](docs/CONTENT_EXPANSION.md)。
+- 護盾道具可在 12 秒內抵擋一次傷害，重複拾取刷新時間；每局首架被擊落的攔截機保證掉落。
+- WASD／方向鍵移動、Space／左鍵射擊、1–4 切換武器、B 炸彈、P／Esc 暫停、R／Enter 重開。
 - 分數、血量、等級、道具、敵方彈幕、BOSS 戰、音效與 Game Over。
-- O 鍵設定選單：主音量、音效、視窗／全螢幕、三種解析度與三段難度，退出後仍會保存。
+- O 鍵設定選單：主音量、音效、視窗／全螢幕、三種解析度與三段難度，退出後仍會保存。全新安裝預設 1600×900；既有玩家保留已儲存的解析度設定。
 - 固定容量子彈／敵人物件池，以及 600 秒模擬壓力測試與 F3 診斷顯示。
+- 爆炸／音效重用池、共享子彈網格、碰撞與 HUD 快取；[深度優化實測與取捨](docs/RUNTIME_OPTIMIZATION.md)。
 - 原創透明 PNG、貼圖、8×8 爆炸精靈表、HUD 示意圖與 WAV 音效。
-- 自動驗收戰鬥、三種道具、炸彈、BOSS、Game Over／重開、素材 alpha、設定持久化與 15 秒場景 smoke。
+- 自動驗收戰鬥、四種道具、編隊、戰區、炸彈、BOSS、Game Over／重開、素材 alpha、設定持久化與 15 秒場景 smoke。
 - Codex `AGENTS.md`、可貼上的命令、PowerShell 安裝／驗證／打包腳本。
 - Ollama MCP Bridge：Codex 可呼叫地端模型規劃、審查檔案與檢查 git diff。
 - 智慧圖譜 JSON、Mermaid、DOT、PNG 與 SVG。
+
+## 武器操作
+
+| 按鍵 | 主武器 | 特性 |
+|---|---|---|
+| 1 | 散射機砲 | 原有五階彈幕，持續壓制 |
+| 2 | 追蹤導彈 | 每輪四枚，轉向追蹤並造成小範圍爆炸 |
+| 3 | 連鎖閃電 | 瞬間連鎖最多五個不同目標 |
+| 4 | 雙束雷射 | 兩條直線貫穿敵群，同一輪不會重複傷害同一敵人 |
+
+按住 Space／滑鼠左鍵射擊。切換武器共用射擊冷卻，不會立即多送一輪攻擊；各模式均保留 2–4 架僚機。能量滿時按 E，暫時改為每輪最多 100 發的自動超載彈幕，包含僚機子彈；重新開始會回到機砲模式。
+
+地圖、傷害規則、測試與量測限制見 [地圖與武器驗收](docs/MAPS_AND_WEAPONS.md)。
 
 ## Windows 發行狀態
 
@@ -159,30 +190,34 @@ ThunderVector3D_StarterKit/
 .\scripts\verify.ps1
 ```
 
-這會跑靜態檢查、Python 單元測試、Godot import/parser、設定、素材、完整玩法流程與固定 60 FPS 的 15 秒主場景 smoke。腳本也能自動找到官方 WinGet 安裝但未加入 PATH 的 Godot 4.7.2。
+這會跑靜態檢查、Python 單元測試、Godot import/parser、設定、素材、完整玩法流程與固定 60 FPS 的 15 秒主場景 smoke。地圖與武器的專用測試位於 `game/tests/`；這些驗證不代表所有硬體的實際畫面幀率。腳本也能自動找到官方 WinGet 安裝但未加入 PATH 的 Godot 4.7.2。
 
 在 Godot 選單安裝與 4.7.2 相符的 Export Templates，然後：
 
 ```powershell
-.\scripts\build_windows.ps1
+.\scripts\build_windows.ps1 -OutputSubdirectory maps-weapons
 ```
+
+地圖與武器版已輸出至獨立的 `build\maps-weapons\`，不覆蓋先前版本。已通過本機 EXE 啟動與 ZIP 驗證，完整來源 SHA、雜湊及限制見 [發行驗收紀錄](docs/MAPS_WEAPONS_RELEASE.md)。這次本機更新尚未推送 GitHub。
 
 輸出位置：
 
 ```text
-build\ThunderVector3D.exe
-build\ThunderVector3D-1.0.0-windows-x86_64.zip
+build\maps-weapons\ThunderVector3D.exe
+build\maps-weapons\ThunderVector3D-1.0.0-windows-x86_64.zip
 ```
 
 啟動已匯出的版本：
 
 ```powershell
-.\scripts\start_game.ps1 -Exported
+.\build\maps-weapons\ThunderVector3D.exe
 ```
+
+不帶 `-OutputSubdirectory` 時仍輸出至 `build\` 根目錄；`scripts/start_game.ps1 -Exported` 只會啟動根目錄中的匯出版本。
 
 ## 素材授權
 
-本專案的程序化模型、原始 PNG／貼圖／WAV，以及七張 ImageGen 透明素材都是為本專案建立的原創內容；生成提示、SHA-256 與 alpha 驗證記錄在 `game/assets/generated/ART_PROVENANCE.md`。不要使用《雷電》原作商標、Logo、音樂、敵機圖或關卡素材；玩法可借鑑縱向射擊類型，但本專案維持自己的名稱與視覺識別。
+本專案的程序化模型、原始 PNG／貼圖／WAV，以及十三張 ImageGen 素材（十二張透明、一張星雲背景）都是為本專案建立的原創內容；生成提示、SHA-256 與驗證記錄在 `game/assets/generated/` 的四份 `*ART_PROVENANCE.md`，包含新增行星的 `MAP_ART_PROVENANCE.md`。不要使用《雷電》原作商標、Logo、音樂、敵機圖或關卡素材；玩法可借鑑縱向射擊類型，但本專案維持自己的名稱與視覺識別。
 
 ## 授權
 
